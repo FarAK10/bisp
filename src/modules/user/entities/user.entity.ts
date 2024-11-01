@@ -6,8 +6,11 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { Role } from '@common/constants/roles.enum';
+import { Course } from '@modules/course/entities/course.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -15,6 +18,12 @@ export class User {
 
   @Column({ unique: true })
   email: string;
+
+  @OneToMany(() => Course, (course) => course.professor)
+  coursesTaught: Course[];
+
+  @ManyToMany(() => Course, (course) => course.students)
+  coursesEnrolled: Course[];
 
   @Column()
   password: string; // Password should be hashed
