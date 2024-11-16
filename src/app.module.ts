@@ -12,6 +12,7 @@ import { AuthGuard } from '@common/guards/auth.guard';
 import { AuthModule } from '@modules/auth/auth.module';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { LectureModule } from '@modules/lecture/lecture.module';
+import { AssignmentModule } from '@modules/assignment/assignment.module';
 @Module({
   imports: [
     ConfigModule.forRoot(), // Import ConfigModule to use environment variables
@@ -21,6 +22,7 @@ import { LectureModule } from '@modules/lecture/lecture.module';
     CourseModule,
     AuthModule,
     LectureModule,
+    AssignmentModule,
   ],
   controllers: [AppController],
   providers: [

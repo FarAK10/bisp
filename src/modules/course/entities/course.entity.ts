@@ -6,10 +6,12 @@ import {
   ManyToMany,
   JoinTable,
   CreateDateColumn,
-  UpdateDateColumn, OneToMany,
+  UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
-import {Lecture} from "@modules/lecture/entities/lecture.entity";
+import { Lecture } from '@modules/lecture/entities/lecture.entity';
+import { Assignment } from '@modules/assignment/entities/assignment.entity';
 
 @Entity('courses')
 export class Course {
@@ -33,8 +35,10 @@ export class Course {
   })
   students: User[];
 
-  @OneToMany(()=> Lecture,(lecture)=>lecture.course)
-  lectures:Lecture[];
+  @OneToMany(() => Assignment, (assignment) => assignment.course)
+  assignments: Assignment[];
+  @OneToMany(() => Lecture, (lecture) => lecture.course)
+  lectures: Lecture[];
 
   @CreateDateColumn()
   createdAt: Date;

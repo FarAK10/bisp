@@ -11,7 +11,8 @@ import {
 } from 'typeorm';
 import { Role } from '@common/constants/roles.enum'; // Assuming Role is an enum
 import { Course } from '@modules/course/entities/course.entity';
-import {Lecture} from "@modules/lecture/entities/lecture.entity";
+import { Lecture } from '@modules/lecture/entities/lecture.entity';
+import { Submission } from '@modules/assignment/entities/submissionn.entity';
 
 @Entity('users')
 export class User {
@@ -27,7 +28,9 @@ export class User {
   @ManyToMany(() => Course, (course) => course.students)
   coursesEnrolled: Course[];
 
-  @OneToMany(()=> Lecture,(lecture)=>lecture.lectureMaterials)
+  @OneToMany(() => Submission, (submission) => submission.student)
+  submissions: Submission[];
+
   @Column()
   password: string; // Password should be hashed
 
@@ -44,8 +47,6 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
-
-
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
