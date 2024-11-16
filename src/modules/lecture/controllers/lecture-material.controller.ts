@@ -31,7 +31,6 @@ export class LectureMaterialsController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
-  @Public()
   @Post('upload')
   @ApiConsumes('multipart/form-data') // Specifies the content type for file upload
   @ApiBody({
