@@ -5,28 +5,28 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
 import { CourseModule } from '@modules/course/course.module';
-
+import JwtModule from './config/jwt';
+import DbModule from './config/db';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from '@common/guards/auth.guard';
+import { AuthModule } from '@modules/auth/auth.module';
+import { RolesGuard } from '@common/guards/roles.guard';
 @Module({
   imports: [
     ConfigModule.forRoot(), // Import ConfigModule to use environment variables
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres', // or 'mysql' for MySQL
-        host: configService.get('DB_HOST'),
-        port: parseInt(configService.get('DB_PORT')),
-        username: configService.get('DB_USER'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true, // Set to false in production
-      }),
-    }),
+    JwtModule,
+    DbModule,
     UserModule,
     CourseModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}

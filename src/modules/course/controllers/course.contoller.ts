@@ -31,7 +31,7 @@ export class CourseController {
   }
 
   @Get()
-  // @Roles(Role.Admin, Role.Professor, Role.Student)
+  @Roles(Role.Admin, Role.Professor, Role.Student)
   async findAll() {
     return this.courseService.findAll();
   }

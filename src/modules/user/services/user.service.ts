@@ -34,7 +34,7 @@ export class UserService {
       email,
       password: hashedPassword,
       name,
-      role: role || Role.Student, // Default to 'Student' if no role is provided
+      roles: [role], // Default to 'Student' if no role is provided
     });
 
     return this.userRepository.save(user);
@@ -42,6 +42,14 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
+  }
+
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOneBy({ email });
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+    return user;
   }
 
   async findOne(id: number): Promise<User> {

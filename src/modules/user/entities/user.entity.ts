@@ -9,8 +9,9 @@ import {
   OneToMany,
   ManyToMany,
 } from 'typeorm';
-import { Role } from '@common/constants/roles.enum';
+import { Role } from '@common/constants/roles.enum'; // Assuming Role is an enum
 import { Course } from '@modules/course/entities/course.entity';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -34,9 +35,10 @@ export class User {
   @Column({
     type: 'enum',
     enum: Role,
-    default: Role.Student,
+    array: true,
+    default: [Role.Student], // Default role can be set to Student
   })
-  role: Role;
+  roles: Role[]; // A single role for each user
 
   @Column({ default: true })
   isActive: boolean;

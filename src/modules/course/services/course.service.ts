@@ -11,6 +11,7 @@ import { CreateCourseDto } from '../dto/create-course.dto';
 import { UpdateCourseDto } from '../dto/update-course.dto';
 import { Course } from '../entities/course.entity';
 import { UserService } from '@modules/user/services/user.service';
+import { Roles } from '@common/decorators/role.decorator';
 
 @Injectable()
 export class CourseService {
@@ -26,7 +27,7 @@ export class CourseService {
   ): Promise<Course> {
     const professor = await this.userService.findOne(professorId);
 
-    if (!professor || professor.role !== Role.Professor) {
+    if (!professor || professor.roles.includes(Role.Student)) {
       throw new ForbiddenException('Only professors can create courses.');
     }
 
@@ -60,24 +61,11 @@ export class CourseService {
   ): Promise<Course> {
     const course = await this.findOne(id);
 
-    if (course.professor.id !== user.id && user.role !== Role.Admin) {
-      throw new ForbiddenException(
-        'You do not have permission to update this course.',
-      );
-    }
-
     await this.courseRepository.update(id, updateCourseDto);
     return this.findOne(id);
   }
-
   async remove(id: number, user: User): Promise<void> {
     const course = await this.findOne(id);
-
-    if (course.professor.id !== user.id && user.role !== Role.Admin) {
-      throw new ForbiddenException(
-        'You do not have permission to delete this course.',
-      );
-    }
 
     await this.courseRepository.delete(id);
   }
@@ -86,7 +74,7 @@ export class CourseService {
     const course = await this.findOne(courseId);
     const student = await this.userService.findOne(studentId);
 
-    if (!student || student.role !== Role.Student) {
+    if (!student || !student.roles.includes(Role.Student)) {
       throw new NotFoundException('Student not found.');
     }
 
