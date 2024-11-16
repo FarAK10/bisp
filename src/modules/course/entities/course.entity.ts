@@ -6,9 +6,10 @@ import {
   ManyToMany,
   JoinTable,
   CreateDateColumn,
-  UpdateDateColumn,
+  UpdateDateColumn, OneToMany,
 } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
+import {Lecture} from "@modules/lecture/entities/lecture.entity";
 
 @Entity('courses')
 export class Course {
@@ -31,6 +32,9 @@ export class Course {
     inverseJoinColumn: { name: 'student_id', referencedColumnName: 'id' },
   })
   students: User[];
+
+  @OneToMany(()=> Lecture,(lecture)=>lecture.course)
+  lectures:Lecture[];
 
   @CreateDateColumn()
   createdAt: Date;
