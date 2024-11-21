@@ -29,7 +29,6 @@ export class AssignmentsService {
     const isEnrolled = course.students.some(
       (student) => student.id === professorId,
     );
-    const isProfessor = course.professor.id === professorId;
     if (course.professor.id !== professorId && !isEnrolled) {
       throw new ForbiddenException(
         'You are not authorized to add assignments to this course.',

@@ -8,7 +8,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { LectureMaterial } from '../entities/lecture-material.entity';
 import { Repository } from 'typeorm';
-import { Lecture } from '../entities/lecture.entity';
 import { User } from '@modules/user/entities/user.entity';
 import { UserService } from '@modules/user/services/user.service';
 import { LectureService } from './lecture.service';

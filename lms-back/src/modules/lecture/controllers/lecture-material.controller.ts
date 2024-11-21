@@ -100,7 +100,6 @@ export class LectureMaterialsController {
     });
   }
 
-  @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Delete(':materialId')
   async deleteMaterial(@Req() req, @Param('materialId') materialId: number) {

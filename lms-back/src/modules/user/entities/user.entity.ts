@@ -13,6 +13,8 @@ import { Role } from '@common/constants/roles.enum'; // Assuming Role is an enum
 import { Course } from '@modules/course/entities/course.entity';
 import { Lecture } from '@modules/lecture/entities/lecture.entity';
 import { Submission } from '@modules/assignment/entities/submissionn.entity';
+import { AttendanceTracking } from '@modules/attendance/entities/attendance-tracking.entity';
+import { AttendanceRecord } from '@modules/attendance/entities/attendacne-record.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -29,6 +31,12 @@ export class User {
 
   @OneToMany(() => Submission, (submission) => submission.student)
   submissions: Submission[];
+
+  @OneToMany(() => AttendanceTracking, (tracking) => tracking.student)
+  attendanceTrackings: AttendanceTracking[];
+
+  @OneToMany(() => AttendanceRecord, (record) => record.student)
+  attendanceRecords: AttendanceRecord[];
 
   @Column()
   password: string; // Password should be hashed
