@@ -15,8 +15,9 @@ import {
 } from '@nestjs/common';
 import { CreateCourseDto } from '../dto/create-course.dto';
 import { UpdateCourseDto } from '../dto/update-course.dto';
+import { GetCourseDto } from '../dto/get-course.dto';
 import { CourseService } from '../services/course.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('courses') // Adds a "users" tag in Swagger
 @Controller('courses')
@@ -30,15 +31,19 @@ export class CourseController {
     return this.courseService.create(createCourseDto, req.user.id);
   }
 
+  @ApiResponse({
+    type: GetCourseDto,
+    isArray: true,
+  })
   @Get()
   @Roles(Role.Admin, Role.Professor, Role.Student)
-  async findAll() {
+  async getAll() {
     return this.courseService.findAll();
   }
 
   @Get(':id')
   @Roles(Role.Admin, Role.Professor, Role.Student)
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async getById(@Param('id', ParseIntPipe) id: number) {
     return this.courseService.findOne(id);
   }
 
