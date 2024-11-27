@@ -19,7 +19,7 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, password, name, role } = createUserDto;
+    const { email, password, name, roles } = createUserDto;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -34,7 +34,7 @@ export class UserService {
       email,
       password: hashedPassword,
       name,
-      roles: [role], // Default to 'Student' if no role is provided
+      roles, // Default to 'Student' if no role is provided
     });
 
     return this.userRepository.save(user);

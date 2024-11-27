@@ -7,6 +7,8 @@ import {
   Put,
   Delete,
   ParseIntPipe,
+  Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
@@ -14,27 +16,51 @@ import { UserService } from '../services/user.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUserDto } from '../dto/get-user.dto';
 import { User } from '../entities/user.entity';
+import { Public } from '@common/decorators/public.decorator';
 @ApiTags('users') // Adds a "users" tag in Swagger
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
+  @Public()
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+    try {
+      return this.userService.create(createUserDto);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
-
   @Get()
-  async findAll() {
-    return this.userService.findAll();
+  async getAllUsers() {
+    try {
+      return this.userService.findAll();
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
   @ApiResponse({
     status: 200,
     type: GetUserDto,
   })
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.findOne(id);
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
+    try {
+      return this.userService.findOne(id);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+  @ApiResponse({
+    status: 200,
+    type: GetUserDto,
+  })
+  @Get('getUserProfile')
+  async getUserProfile(@Request() req) {
+    try {
+      return req.user;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 
   @Put(':id')
@@ -42,11 +68,19 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.update(id, updateUserDto);
+    try {
+      return this.userService.update(id, updateUserDto);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.remove(id);
+    try {
+      return this.userService.remove(id);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

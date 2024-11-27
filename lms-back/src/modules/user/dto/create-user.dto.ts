@@ -1,4 +1,7 @@
 import {
+  ArrayNotEmpty,
+  ArrayUnique,
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -24,7 +27,14 @@ export class CreateUserDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty()
-  @IsEnum(Role)
-  role: Role;
+  @ApiProperty({
+    example: [Role.Admin],
+    description: 'List of user roles',
+    type: [String],
+  })
+  @IsArray()
+  @ArrayNotEmpty({ message: 'At least one role must be specified' })
+  @ArrayUnique({ message: 'Roles must be unique' })
+  @IsEnum(Role, { each: true, message: 'Each role must be a valid Role' })
+  roles: Role[];
 }
