@@ -2,8 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
@@ -11,10 +9,10 @@ import {
 } from 'typeorm';
 import { Role } from '@common/constants/roles.enum'; // Assuming Role is an enum
 import { Course } from '@modules/course/entities/course.entity';
-import { Lecture } from '@modules/lecture/entities/lecture.entity';
 import { Submission } from '@modules/assignment/entities/submissionn.entity';
 import { AttendanceTracking } from '@modules/attendance/entities/attendance-tracking.entity';
 import { AttendanceRecord } from '@modules/attendance/entities/attendacne-record.entity';
+import { Badge } from '@modules/gamification/entities/badge.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -37,6 +35,9 @@ export class User {
 
   @OneToMany(() => AttendanceRecord, (record) => record.student)
   attendanceRecords: AttendanceRecord[];
+
+  @OneToMany(() => Badge, (badge) => badge.users)
+  badges: Badge[];
 
   @Column()
   password: string; // Password should be hashed

@@ -10,6 +10,7 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { LectureModule } from '@modules/lecture/lecture.module';
 import { AssignmentModule } from '@modules/assignment/assignment.module';
 import { AttendanceModule } from '@modules/attendance/attendance.module';
+import { GamificationModule } from '@modules/gamification/gamification.module';
 @Module({
   imports: [
     ConfigModule.forRoot(), // Import ConfigModule to use environment variables
@@ -21,6 +22,7 @@ import { AttendanceModule } from '@modules/attendance/attendance.module';
     LectureModule,
     AssignmentModule,
     AttendanceModule,
+    GamificationModule,
   ],
   controllers: [],
   providers: [
