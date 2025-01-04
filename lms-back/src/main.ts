@@ -5,6 +5,7 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   const corsOptions: CorsOptions = {
     origin: 'http://localhost:4200',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
@@ -17,21 +18,30 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Cats example')
     .setDescription('The cats API description')
-    .setVersion('1.0f')
+    .setVersion('1.0')
     .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
         in: 'header',
       },
-      'jwt',
+      'access-token',
     )
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      security: [
+        {
+          'access-token': [],
+        },
+      ],
+    },
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

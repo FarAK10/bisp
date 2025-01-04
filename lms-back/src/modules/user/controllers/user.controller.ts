@@ -17,7 +17,9 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUserDto } from '../dto/get-user.dto';
 import { User } from '../entities/user.entity';
 import { Public } from '@common/decorators/public.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 @ApiTags('users') // Adds a "users" tag in Swagger
+@ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -57,7 +59,14 @@ export class UserController {
   @Get('getUserProfile')
   async getUserProfile(@Request() req) {
     try {
-      return req.user;
+      const user: User = req.user;
+      const userDTO: GetUserDto = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+      };
+      return userDTO;
     } catch (err) {
       throw new BadRequestException(err.message);
     }

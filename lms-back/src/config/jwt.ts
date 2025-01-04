@@ -4,5 +4,5 @@ import { JwtModule } from '@nestjs/jwt';
 export default JwtModule.register({
   global: true,
   secret: jwtConstants.secret,
-  signOptions: { expiresIn: '60s' },
+  signOptions: { expiresIn: '7d' },
 });
