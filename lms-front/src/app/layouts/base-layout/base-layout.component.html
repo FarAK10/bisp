@@ -1,0 +1,22 @@
+<nz-layout class="base-layout">
+  <nz-sider
+    nzWidth="200px"
+    nzCollapsible
+    [(nzCollapsed)]="isCollapsed"
+    [nzTrigger]="null"
+    nzTheme="light"
+    [ngClass]="{ empty: isEmpty() }"
+    class="sider"
+  >
+    <dash-base-sider [isCollapsed]="isCollapsed()"> </dash-base-sider>
+  </nz-sider>
+  <nz-layout>
+    <nz-header [ngClass]="{ hide: isEmpty() }" class="header">
+      <dash-base-header [(isCollapsed)]="isCollapsed"> </dash-base-header>
+    </nz-header>
+
+    <nz-content class="content">
+      <router-outlet></router-outlet>
+    </nz-content>
+  </nz-layout>
+</nz-layout>

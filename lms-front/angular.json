@@ -20,20 +20,24 @@
             "outputPath": "dist/lms-front",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "less",
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "./node_modules/@ant-design/icons-angular/src/inline-svg/",
+                "output": "/assets/"
               }
             ],
-            "styles": [
-              "src/styles.less"
-            ],
+            "stylePreprocessorOptions": {
+              "includePaths": ["public/styles"]
+            },
+            "styles": ["src/styles.less"],
             "scripts": []
           },
           "configurations": {
@@ -78,10 +82,7 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "less",
             "assets": [
@@ -90,13 +91,14 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.less"
-            ],
+            "styles": ["src/styles.less"],
             "scripts": []
           }
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "642bc482-5941-430b-a162-38769d461d25"
   }
 }

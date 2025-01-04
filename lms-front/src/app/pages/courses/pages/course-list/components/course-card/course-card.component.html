@@ -1,0 +1,13 @@
+@if (course(); as course) {
+<nz-card [nzTitle]="course.title" [nzActions]="[courseActions]">
+  <p>{{ course.description }}</p>
+  <div class="professor-info">
+    <p><strong>Professor:</strong> {{ course.professor.name }}</p>
+    <p><strong>Email:</strong> {{ course.professor.email }}</p>
+  </div>
+</nz-card>
+}
+<ng-template #courseActions>
+  <a (click)="viewCourse()">View</a>
+  <a (click)="enrollInCourse()">Enroll</a>
+</ng-template>

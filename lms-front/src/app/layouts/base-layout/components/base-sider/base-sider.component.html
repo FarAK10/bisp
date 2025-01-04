@@ -1,0 +1,58 @@
+<ng-container>
+  <ul
+    nz-menu
+    nzTheme="light"
+    nzMode="inline"
+    [nzInlineCollapsed]="isCollapsed()"
+  >
+    @for (item of navigation; track item.title) { @if (!!item?.groupName) {
+    <ng-container *permission="item?.roles">
+      <li nz-menu-group [nzTitle]="item.groupName">
+        <ul>
+          <ng-container
+            [ngTemplateOutlet]="soloRef"
+            [ngTemplateOutletContext]="{ item }"
+          >
+          </ng-container>
+        </ul>
+      </li>
+    </ng-container>
+    } @else {
+    <ng-container *permission="item?.roles">
+      <ng-container
+        [ngTemplateOutlet]="soloRef"
+        [ngTemplateOutletContext]="{ item }"
+      >
+      </ng-container>
+    </ng-container>
+    } }
+
+    <ng-template #soloRef let-item="item">
+      @switch (item?.type) { @case ('multiple') {
+      <ng-container *permission="item?.roles">
+        <li nz-submenu [nzIcon]="item?.icon" [nzTitle]="item?.title">
+          <ul>
+            @for (child of item.children; track child.title) {
+            <ng-container *permission="child?.roles">
+              <ng-container
+                [ngTemplateOutlet]="soloRef"
+                [ngTemplateOutletContext]="{ item: child }"
+              >
+              </ng-container>
+            </ng-container>
+            }
+          </ul>
+        </li>
+      </ng-container>
+      } @default {
+      <ng-container *permission="item?.roles">
+        <li nz-menu-item [nzMatchRouter]="true" [routerLink]="item.url">
+          <span nz-icon [nzType]="item?.icon"> </span>
+
+          <span>{{ item.title }}</span>
+        </li>
+      </ng-container>
+      } }
+    </ng-template>
+  </ul>
+</ng-container>

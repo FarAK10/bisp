@@ -1,0 +1,66 @@
+@import "colors";
+@import "mixins";
+
+.base-layout {
+  position: relative;
+  display: flex;
+  max-width: 100vw;
+  min-height: 100svh;
+
+  .header {
+    position: sticky;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    background: @ui-white-1;
+    padding: 0 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+
+    &.hide {
+      animation: headerResizeTop 0.5s 1;
+      height: 0;
+    }
+  }
+
+  .sider {
+    position: sticky;
+    top: 0;
+    left: 0;
+    height: 100svh;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &.empty {
+      min-width: 0 !important;
+      max-width: 0 !important;
+    }
+
+    .scrollbar-mixin();
+
+    .logo {
+      position: sticky;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 64px;
+      overflow: hidden;
+      background: @ui-white-1;
+      z-index: 100;
+    }
+  }
+
+  .content {
+    padding: 20px;
+
+    ::ng-deep router-outlet + * {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-height: 100%;
+      height: 100%;
+    }
+  }
+}
