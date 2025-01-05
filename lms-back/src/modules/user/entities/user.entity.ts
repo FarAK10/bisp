@@ -42,8 +42,10 @@ export class User {
   password: string; // Password should be hashed
 
   @Column()
-  name: string;
+  firstName: string;
 
+  @Column()
+  lastName: string;
   @Column({
     type: 'enum',
     enum: Role,

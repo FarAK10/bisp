@@ -10,6 +10,8 @@ import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TableResponseDto } from '@common/dto/table.dto';
+import { GetUserDto } from '../dto/get-user.dto';
 
 @Injectable()
 export class UserService {
@@ -19,7 +21,7 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, password, name, roles } = createUserDto;
+    const { email, password, firstName, lastName, roles } = createUserDto;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -33,15 +35,39 @@ export class UserService {
     const user = this.userRepository.create({
       email,
       password: hashedPassword,
-      name,
+      firstName,
+      lastName,
       roles, // Default to 'Student' if no role is provided
     });
 
     return this.userRepository.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async findAll(
+    page?: number,
+    limit?: number,
+  ): Promise<TableResponseDto<GetUserDto>> {
+    if (!page || !limit) {
+      const [data, count] = await this.userRepository.findAndCount();
+      return {
+        data,
+        count,
+        page: null,
+        limit: null,
+      };
+    }
+
+    const [data, count] = await this.userRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data,
+      count,
+      page,
+      limit,
+    };
   }
 
   async findByEmail(email: string): Promise<User> {

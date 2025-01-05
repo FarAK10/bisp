@@ -25,7 +25,12 @@ export class CreateUserDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  name: string;
+  firstName: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  lastName: string;
 
   @ApiProperty({
     example: [Role.Admin],
