@@ -3,6 +3,7 @@ import { IS_PUBLIC_KEY } from '@common/decorators/public.decorator';
 import { Role } from '../constants/roles.enum';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { User } from '@modules/user/entities/user.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -21,8 +22,8 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.includes(user?.role);
+    const { user } = context.switchToHttp().getRequest() as { user: User };
+    return requiredRoles.some((role) => user.roles?.includes(role));
   }
 
   private enablePublicApi(context: ExecutionContext) {

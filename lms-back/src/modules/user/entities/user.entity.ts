@@ -1,3 +1,5 @@
+// user.entity.ts
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -5,14 +7,15 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
-  ManyToMany,
 } from 'typeorm';
-import { Role } from '@common/constants/roles.enum'; // Assuming Role is an enum
 import { Course } from '@modules/course/entities/course.entity';
 import { Submission } from '@modules/assignment/entities/submissionn.entity';
 import { AttendanceTracking } from '@modules/attendance/entities/attendance-tracking.entity';
 import { AttendanceRecord } from '@modules/attendance/entities/attendacne-record.entity';
 import { Badge } from '@modules/gamification/entities/badge.entity';
+import { Role } from '@common/constants/roles.enum';
+import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -24,11 +27,15 @@ export class User {
   @OneToMany(() => Course, (course) => course.professor)
   coursesTaught: Course[];
 
-  @ManyToMany(() => Course, (course) => course.students)
-  coursesEnrolled: Course[];
+  // Remove or comment out the ManyToMany
+  // @ManyToMany(() => Course, (course) => course.students)
+  // coursesEnrolled: Course[];
 
   @OneToMany(() => Submission, (submission) => submission.student)
   submissions: Submission[];
+
+  @OneToMany(() => Course, (course) => course.professor)
+  coursesLead: Course[];
 
   @OneToMany(() => AttendanceTracking, (tracking) => tracking.student)
   attendanceTrackings: AttendanceTracking[];
@@ -39,21 +46,26 @@ export class User {
   @OneToMany(() => Badge, (badge) => badge.users)
   badges: Badge[];
 
+  // New relationship to the StudentEnrollment entity
+  @OneToMany(() => StudentEnrollment, (enrollment) => enrollment.student)
+  enrollments: StudentEnrollment[];
+
   @Column()
-  password: string; // Password should be hashed
+  password: string;
 
   @Column()
   firstName: string;
 
   @Column()
   lastName: string;
+
   @Column({
     type: 'enum',
     enum: Role,
     array: true,
-    default: [Role.Student], // Default role can be set to Student
+    default: [Role.Student],
   })
-  roles: Role[]; // A single role for each user
+  roles: Role[];
 
   @Column({ default: true })
   isActive: boolean;

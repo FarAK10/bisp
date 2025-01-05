@@ -8,3 +8,9 @@ export class GetUserDto extends OmitType(UpdateUserDto, ['password']) {
   @ApiProperty()
   updatedAt: Date;
 }
+
+export class GetBaseUserDto extends OmitType(GetUserDto, [
+  'roles',
+  'createdAt',
+  'updatedAt',
+]) {}

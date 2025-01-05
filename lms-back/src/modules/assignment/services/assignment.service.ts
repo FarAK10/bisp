@@ -26,10 +26,8 @@ export class AssignmentsService {
     createAssignmentDto: CreateAssignmentDto,
   ): Promise<Assignment> {
     const course = await this.courseService.findOne(courseId, ['professor']);
-    const isEnrolled = course.students.some(
-      (student) => student.id === professorId,
-    );
-    if (course.professor.id !== professorId && !isEnrolled) {
+
+    if (course.professor.id !== professorId) {
       throw new ForbiddenException(
         'You are not authorized to add assignments to this course.',
       );
@@ -91,12 +89,9 @@ export class AssignmentsService {
 
     Object.assign(assignment, updateAssignmentDto);
     const course = assignment.course;
-    const isEnrolled = course.students.some(
-      (student) => student.id === professorId,
-    );
     const isProfessor = course.professor.id === professorId;
 
-    if (!isEnrolled && !isProfessor) {
+    if (!isProfessor) {
       throw new ForbiddenException('Access denied to this assignment.');
     }
     return await this.assignmentRepository.save(assignment);

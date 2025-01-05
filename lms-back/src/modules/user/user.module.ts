@@ -4,6 +4,7 @@ import { UserService } from './services/user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { UserProfile } from './services/user.profile';
+import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
 
 @Module({
   imports: [

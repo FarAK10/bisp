@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { GetUserDto } from '@modules/user/dto/get-user.dto';
+import { GetBaseUserDto, GetUserDto } from '@modules/user/dto/get-user.dto';
 export class GetCourseDto {
   @ApiProperty()
   title: string;
@@ -8,5 +8,5 @@ export class GetCourseDto {
   description?: string;
 
   @ApiProperty()
-  professor: GetUserDto;
+  professor: GetBaseUserDto;
 }

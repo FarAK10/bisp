@@ -12,6 +12,8 @@ import { UpdateCourseDto } from '../dto/update-course.dto';
 import { Course } from '../entities/course.entity';
 import { UserService } from '@modules/user/services/user.service';
 import { Roles } from '@common/decorators/role.decorator';
+import { StudentEnrollment } from '../entities/student-entrollment.entity';
+import { CourseTableResponseDto } from '../dto/table-response.dto';
 
 @Injectable()
 export class CourseService {
@@ -19,6 +21,8 @@ export class CourseService {
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
     private userService: UserService,
+    @InjectRepository(StudentEnrollment)
+    private studentEnrollmentRepository: Repository<StudentEnrollment>,
   ) {}
 
   async create(
@@ -39,8 +43,33 @@ export class CourseService {
     return this.courseRepository.save(course);
   }
 
-  async findAll(): Promise<Course[]> {
-    return this.courseRepository.find({ relations: ['professor', 'students'] });
+  async findAll(
+    page?: number,
+    limit?: number,
+  ): Promise<CourseTableResponseDto> {
+    if (!page || !limit) {
+      const [data, count] = await this.courseRepository.findAndCount({
+        relations: ['professor'],
+      });
+
+      return {
+        data,
+        count,
+        page: null,
+        limit: null,
+      };
+    }
+    const [data, count] = await this.courseRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['professor'],
+    });
+    return {
+      data,
+      count,
+      page,
+      limit,
+    };
   }
 
   async findOne(
@@ -73,26 +102,46 @@ export class CourseService {
     await this.courseRepository.delete(id);
   }
 
-  async enrollStudent(courseId: number, studentId: number): Promise<Course> {
-    const course = await this.findOne(courseId);
+  async enrollStudent(courseId: number, studentId: number) {
+    const course = await this.courseRepository.findOne({
+      where: {
+        id: courseId,
+      },
+    });
     const student = await this.userService.findOne(studentId);
 
-    if (!student || !student.roles.includes(Role.Student)) {
-      throw new NotFoundException('Student not found.');
-    }
+    const enrollment = this.studentEnrollmentRepository.create({
+      course,
+      student,
+      enrollmentDate: new Date(),
+      status: 'active',
+    });
 
-    course.students = course.students
-      ? [...course.students, student]
-      : [student];
-    return this.courseRepository.save(course);
+    return this.studentEnrollmentRepository.save(enrollment);
   }
 
-  async unenrollStudent(courseId: number, studentId: number): Promise<Course> {
-    const course = await this.findOne(courseId);
+  // Update final grade
+  async setFinalGrade(enrollmentId: number, grade: number) {
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: { enrollmentId: enrollmentId },
+    });
+    if (!enrollment) throw new NotFoundException('Enrollment not found');
 
-    course.students = course.students.filter(
-      (student) => student.id !== studentId,
-    );
-    return this.courseRepository.save(course);
+    enrollment.finalGrade = grade;
+    enrollment.status = 'completed';
+
+    return this.studentEnrollmentRepository.save(enrollment);
+  }
+
+  async unenrollStudentFromCourse(courseId: number, studentId: number) {
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: { course: { id: courseId }, student: { id: studentId } },
+    });
+
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found.');
+    }
+
+    await this.studentEnrollmentRepository.remove(enrollment);
   }
 }

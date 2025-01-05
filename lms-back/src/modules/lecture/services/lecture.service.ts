@@ -13,6 +13,7 @@ import { CreateLectureDto } from '../dto/create-lecture.dto';
 import { UpdateLectureDto } from '../dto/update-lecture.dto';
 import { CourseService } from '@modules/course/services/course.service';
 import { ScheduleService } from '@modules/schedule/services/schedule.service';
+import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
 
 @Injectable()
 export class LectureService {
@@ -21,6 +22,8 @@ export class LectureService {
     private lecturesRepository: Repository<Lecture>,
     private courseService: CourseService,
     private scheduleService: ScheduleService,
+    @InjectRepository(StudentEnrollment)
+    private studentEnrollmentRepository: Repository<StudentEnrollment>,
   ) {}
 
   // Create a lecture within a course
@@ -125,15 +128,29 @@ export class LectureService {
     userId: number,
     courseId: number,
   ): Promise<Lecture[]> {
-    const course = await this.courseService.findOne(courseId);
+    // 2) Fetch the course (with 'professor' if you need to check professor)
+    const course = await this.courseService.findOne(courseId, ['professor']);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
 
-    const isStudent = course.students.some((student) => student.id === userId);
+    // 3) Check if user is the professor
     const isProfessor = course.professor.id === userId;
+
+    // 4) Check if user is enrolled (student) via the StudentEnrollment table
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: {
+        student: { id: userId },
+        course: { id: courseId },
+      },
+    });
+    const isStudent = !!enrollment; // true if an enrollment row exists
 
     if (!isStudent && !isProfessor) {
       throw new ForbiddenException('Access denied to this course.');
     }
 
+    // 5) Return the lectures
     return await this.lecturesRepository.find({
       where: { course },
       relations: ['lectureMaterials'],
@@ -141,19 +158,25 @@ export class LectureService {
     });
   }
 
-  // Get a single lecture
   async getLectureById(userId: number, lectureId: number): Promise<Lecture> {
     const lecture = await this.lecturesRepository.findOne({
       where: { id: lectureId },
-      relations: ['course', 'course.students', 'course.professor'],
+      relations: ['course', 'course.professor'],
     });
     if (!lecture) {
       throw new NotFoundException('Lecture not found.');
     }
 
     const course = lecture.course;
-    const isStudent = course.students.some((student) => student.id === userId);
     const isProfessor = course.professor.id === userId;
+
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: {
+        student: { id: userId },
+        course: { id: course.id },
+      },
+    });
+    const isStudent = !!enrollment;
 
     if (!isStudent && !isProfessor) {
       throw new ForbiddenException('Access denied to this lecture.');
@@ -161,7 +184,6 @@ export class LectureService {
 
     return lecture;
   }
-
   // Delete a lecture
   async deleteLecture(professorId: number, lectureId: number): Promise<void> {
     const lecture = await this.lecturesRepository.findOne({

@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
 import { UserService } from '@modules/user/services/user.service';
 import { LectureService } from './lecture.service';
+import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
 @Injectable()
 export class LectureMaterialsService {
   constructor(
@@ -18,6 +19,8 @@ export class LectureMaterialsService {
     private lectureMaterialsRepository: Repository<LectureMaterial>,
     private lectureService: LectureService,
     private userService: UserService,
+    @InjectRepository(StudentEnrollment)
+    private studentEnrollmentRepository: Repository<StudentEnrollment>,
   ) {}
 
   // Upload material to a lecture
@@ -47,23 +50,34 @@ export class LectureMaterialsService {
     return await this.lectureMaterialsRepository.save(lectureMaterial);
   }
 
-  // Get materials for a lecture
   async getMaterialsByLecture(
     userId: number,
     lectureId: number,
   ): Promise<LectureMaterial[]> {
+    // 1) We still fetch the lecture using lectureService.getLectureById
+    //    but we do not rely on 'course.students' inside that method.
     const lecture = await this.lectureService.getLectureById(userId, lectureId);
 
+    // 2) Check if this user is the professor
     const course = lecture.course;
-    const isStudent = course.students.some((student) => student.id === userId);
     const isProfessor = course.professor.id === userId;
 
-    if (!isStudent && !isProfessor) {
+    // 3) Check if this user is enrolled via StudentEnrollment
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: {
+        course: { id: course.id },
+        student: { id: userId },
+      },
+    });
+    const isStudent = !!enrollment;
+
+    if (!isProfessor && !isStudent) {
       throw new ForbiddenException('Access denied to this lecture.');
     }
 
-    return await this.lectureMaterialsRepository.find({
-      where: { lecture: lecture },
+    // 4) Return materials
+    return this.lectureMaterialsRepository.find({
+      where: { lecture },
       relations: ['uploadedBy'],
       order: { uploadedAt: 'DESC' },
     });
@@ -74,30 +88,34 @@ export class LectureMaterialsService {
     userId: number,
     materialId: number,
   ): Promise<LectureMaterial> {
+    // 1) Fetch material (without course.students)
     const material = await this.lectureMaterialsRepository.findOne({
       where: { id: materialId },
-      relations: [
-        'lecture',
-        'lecture.course',
-        'lecture.course.students',
-        'lecture.course.professor',
-      ],
+      relations: ['lecture', 'lecture.course', 'lecture.course.professor'],
     });
+
     if (!material) {
       throw new NotFoundException('Material not found.');
     }
 
+    // 2) Check if user is professor or enrolled
     const course = material.lecture.course;
-    const isStudent = course.students.some((student) => student.id === userId);
     const isProfessor = course.professor.id === userId;
 
-    if (!isStudent && !isProfessor) {
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: {
+        course: { id: course.id },
+        student: { id: userId },
+      },
+    });
+    const isStudent = !!enrollment;
+
+    if (!isProfessor && !isStudent) {
       throw new ForbiddenException('Access denied to this material.');
     }
 
     return material;
   }
-
   // Delete a material
   async deleteMaterial(professorId: number, materialId: number): Promise<void> {
     const material = await this.lectureMaterialsRepository.findOne({

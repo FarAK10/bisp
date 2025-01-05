@@ -11,6 +11,7 @@ import { Assignment } from '../entities/assignment.entity';
 import { Submission } from '../entities/submissionn.entity';
 import { AssignmentsService } from './assignment.service';
 import { UserService } from '@modules/user/services/user.service';
+import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
 
 @Injectable()
 export class SubmissionsService {
@@ -19,6 +20,8 @@ export class SubmissionsService {
     private submissionsRepository: Repository<Submission>,
     private assignmentService: AssignmentsService,
     private userService: UserService,
+    @InjectRepository(StudentEnrollment)
+    private studentEnrollmentRepository: Repository<StudentEnrollment>,
   ) {}
 
   // Submit an assignment
@@ -27,25 +30,35 @@ export class SubmissionsService {
     assignmentId: number,
     file: Express.Multer.File,
   ): Promise<Submission> {
+    // 1) Remove "course.students" from relations
     const assignment = await this.assignmentService.getAssignmentById(
       assignmentId,
-      ['course', 'course.students'],
+      ['course', 'course.professor'], // if you need the professor
     );
 
-    const isEnrolled = assignment.course.students.some(
-      (student) => student.id === studentId,
-    );
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found.');
+    }
 
+    // 2) Check enrollment via StudentEnrollment pivot table
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: {
+        course: { id: assignment.course.id },
+        student: { id: studentId },
+      },
+    });
+
+    const isEnrolled = !!enrollment;
     if (!isEnrolled) {
       throw new ForbiddenException('You are not enrolled in this course.');
     }
 
-    // Check if the assignment is past due
+    // 3) Check if the assignment is past due
     if (new Date() > assignment.dueDate) {
       throw new ForbiddenException('The assignment submission is past due.');
     }
 
-    // Check if the student has already submitted
+    // 4) Check if the student has already submitted
     const existingSubmission = await this.submissionsRepository.findOne({
       where: {
         assignment: { id: assignmentId },
@@ -54,10 +67,11 @@ export class SubmissionsService {
     });
 
     if (existingSubmission) {
-      // Optionally, allow resubmission by updating existing submission
+      // Optionally, allow resubmission by removing the old submission
       await this.submissionsRepository.remove(existingSubmission);
     }
 
+    // 5) Create and save a new submission
     const submission = this.submissionsRepository.create({
       assignment,
       student: { id: studentId },

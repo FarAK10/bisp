@@ -12,13 +12,16 @@ import {
   UseGuards,
   Request,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { CreateCourseDto } from '../dto/create-course.dto';
 import { UpdateCourseDto } from '../dto/update-course.dto';
 import { GetCourseDto } from '../dto/get-course.dto';
 import { CourseService } from '../services/course.service';
-import { ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
-
+import { ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CourseTableResponseDto } from '../dto/table-response.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
+@ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @ApiTags('courses') // Adds a "users" tag in Swagger
 @Controller('courses')
 @UseGuards(RolesGuard)
@@ -26,21 +29,25 @@ export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
   @Post()
-  @Roles(Role.Professor)
+  @Roles(Role.Admin)
   async create(@Body() createCourseDto: CreateCourseDto, @Request() req) {
     return this.courseService.create(createCourseDto, req.user.id);
   }
 
   @ApiResponse({
-    type: GetCourseDto,
-    isArray: true,
+    type: CourseTableResponseDto,
   })
   @Get()
-  @Roles(Role.Admin, Role.Professor, Role.Student)
-  async getAll() {
-    return this.courseService.findAll();
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @Roles(Role.Admin)
+  async getAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.courseService.findAll(page, limit);
   }
 
+  @ApiResponse({
+    type: GetCourseDto,
+  })
   @Get(':id')
   @Roles(Role.Admin, Role.Professor, Role.Student)
   async getById(@Param('id', ParseIntPipe) id: number) {
@@ -72,6 +79,6 @@ export class CourseController {
   @Post(':id/unenroll')
   @Roles(Role.Student)
   async unenroll(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.courseService.unenrollStudent(id, req.user.id);
+    return this.courseService.unenrollStudentFromCourse(id, req.user.id);
   }
 }

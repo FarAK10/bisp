@@ -22,7 +22,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { UserProfile } from '../services/user.profile';
 import { TableResponseDto } from '@common/dto/table.dto';
 import { ApiTableResponse } from '@common/decorators/table-response.decorator';
-import { UserTableResponseDto } from '../dto/table-response.dot';
+import { UserTableResponseDto } from '../dto/table-response.dto';
 @ApiTags('users') // Adds a "users" tag in Swagger
 @ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @Controller('users')
