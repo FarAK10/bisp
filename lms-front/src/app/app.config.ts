@@ -13,6 +13,7 @@ import { API_BASE_URL } from './core/api/lms-api';
 import { JWT_OPTIONS, JwtHelperService, JwtModule } from '@auth0/angular-jwt';
 import { jwtOptionsFactory } from './core/utils/jwt-factory';
 import { StorageService } from './core/services/storage.service';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -32,5 +33,6 @@ export const appConfig: ApplicationConfig = {
         },
       })
     ),
+    importProvidersFrom(BrowserAnimationsModule),
   ],
 };

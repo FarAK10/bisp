@@ -10,7 +10,7 @@ import {
   withHooks,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { Observable, pipe, tap, switchMap, from } from 'rxjs';
+import { Observable, pipe, tap, switchMap, from, finalize } from 'rxjs';
 import {
   GetUserDto,
   UserControllerClient,
@@ -49,17 +49,19 @@ export class AuthStore extends signalStore(
     const storage = inject(StorageService);
     const authService = inject(AuthService);
 
-    // Modified loadUser to return an Observable
     const loadUser = (): Observable<GetUserDto> => {
       patchState(store, { isLoading: true });
 
       return userClient.getUserProfile().pipe(
         tap({
           next: (user: GetUserDto) => {
-            patchState(store, { user, isLoading: false, error: null });
+            patchState(store, { user, error: null });
           },
           error: (error) => {
-            patchState(store, { isLoading: false, error: error.message });
+            patchState(store, { error: error.message });
+          },
+          finalize: () => {
+            patchState(store, { isLoading: false });
           },
         })
       );
@@ -75,8 +77,10 @@ export class AuthStore extends signalStore(
               next: () => {
                 router.navigate(['']);
               },
-              error: (error) =>
-                patchState(store, { isLoading: false, error: error.message }),
+              error: (error) => patchState(store, { error: error.message }),
+              complete() {
+                patchState(store, { isLoading: false });
+              },
             })
           )
         )
@@ -98,7 +102,6 @@ export class AuthStore extends signalStore(
   withHooks({
     onInit(store) {
       if (store.isAuthenticated() && !store.user()) {
-        store.loadUser().subscribe();
       }
     },
   })

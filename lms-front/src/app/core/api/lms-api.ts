@@ -16,12 +16,12 @@ import { HttpClient, HttpHeaders, HttpResponse, HttpResponseBase } from '@angula
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 export interface IUserControllerClient {
-    create(body: CreateUserDto): Observable<void>;
-    getAllUsers(): Observable<void>;
-    getUserById(id: number): Observable<GetUserDto>;
-    update(id: number, body: UpdateUserDto): Observable<void>;
-    remove(id: number): Observable<void>;
+    create(body: CreateUserDto): Observable<GetUserDto>;
+    getAllUsers(page: number | undefined, limit: number | undefined): Observable<UserTableResponseDto>;
     getUserProfile(): Observable<GetUserDto>;
+    getUserById(id: number): Observable<GetUserDto>;
+    update(id: number, body: UpdateUserDto): Observable<GetUserDto>;
+    remove(id: number): Observable<void>;
 }
 
 @Injectable({
@@ -37,7 +37,7 @@ export class UserControllerClient implements IUserControllerClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    create(body: CreateUserDto): Observable<void> {
+    create(body: CreateUserDto): Observable<GetUserDto> {
         let url_ = this.baseUrl + "/users";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -49,6 +49,7 @@ export class UserControllerClient implements IUserControllerClient {
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             })
         };
 
@@ -59,23 +60,25 @@ export class UserControllerClient implements IUserControllerClient {
                 try {
                     return this.processCreate(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<GetUserDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<GetUserDto>;
         }));
     }
 
-    protected processCreate(response: HttpResponseBase): Observable<void> {
+    protected processCreate(response: HttpResponseBase): Observable<GetUserDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetUserDto;
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -85,14 +88,23 @@ export class UserControllerClient implements IUserControllerClient {
         return _observableOf(null as any);
     }
 
-    getAllUsers(): Observable<void> {
-        let url_ = this.baseUrl + "/users";
+    getAllUsers(page: number | undefined, limit: number | undefined): Observable<UserTableResponseDto> {
+        let url_ = this.baseUrl + "/users?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (limit === null)
+            throw new Error("The parameter 'limit' cannot be null.");
+        else if (limit !== undefined)
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/json"
             })
         };
 
@@ -103,14 +115,56 @@ export class UserControllerClient implements IUserControllerClient {
                 try {
                     return this.processGetAllUsers(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<UserTableResponseDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<UserTableResponseDto>;
         }));
     }
 
-    protected processGetAllUsers(response: HttpResponseBase): Observable<void> {
+    protected processGetAllUsers(response: HttpResponseBase): Observable<UserTableResponseDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UserTableResponseDto;
+            return _observableOf(resultdefault);
+            }));
+        }
+    }
+
+    getUserProfile(): Observable<GetUserDto> {
+        let url_ = this.baseUrl + "/users/getUserProfile";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetUserProfile(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetUserProfile(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetUserDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetUserDto>;
+        }));
+    }
+
+    protected processGetUserProfile(response: HttpResponseBase): Observable<GetUserDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -119,7 +173,9 @@ export class UserControllerClient implements IUserControllerClient {
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetUserDto;
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -179,7 +235,7 @@ export class UserControllerClient implements IUserControllerClient {
         return _observableOf(null as any);
     }
 
-    update(id: number, body: UpdateUserDto): Observable<void> {
+    update(id: number, body: UpdateUserDto): Observable<GetUserDto> {
         let url_ = this.baseUrl + "/users/{id}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
@@ -194,6 +250,7 @@ export class UserControllerClient implements IUserControllerClient {
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             })
         };
 
@@ -204,14 +261,14 @@ export class UserControllerClient implements IUserControllerClient {
                 try {
                     return this.processUpdate(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<GetUserDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<GetUserDto>;
         }));
     }
 
-    protected processUpdate(response: HttpResponseBase): Observable<void> {
+    protected processUpdate(response: HttpResponseBase): Observable<GetUserDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -220,7 +277,9 @@ export class UserControllerClient implements IUserControllerClient {
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetUserDto;
+            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -268,53 +327,6 @@ export class UserControllerClient implements IUserControllerClient {
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    getUserProfile(): Observable<GetUserDto> {
-        let url_ = this.baseUrl + "/users/getUserProfile";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processGetUserProfile(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processGetUserProfile(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<GetUserDto>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<GetUserDto>;
-        }));
-    }
-
-    protected processGetUserProfile(response: HttpResponseBase): Observable<GetUserDto> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetUserDto;
-            return _observableOf(result200);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -2194,7 +2206,8 @@ export class AttendanceControllerClient implements IAttendanceControllerClient {
 export interface CreateUserDto {
     email: string;
     password: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     /** List of user roles */
     roles: string[];
 
@@ -2203,10 +2216,22 @@ export interface CreateUserDto {
 
 export interface GetUserDto {
     email?: string;
-    name?: string;
+    firstName?: string;
+    lastName?: string;
     /** List of user roles */
     roles?: string[];
     id: number;
+    createdAt: Date;
+    updatedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface UserTableResponseDto {
+    data: GetUserDto[];
+    count: number;
+    page: number;
+    limit: number;
 
     [key: string]: any;
 }
@@ -2214,7 +2239,8 @@ export interface GetUserDto {
 export interface UpdateUserDto {
     email?: string;
     password?: string;
-    name?: string;
+    firstName?: string;
+    lastName?: string;
     /** List of user roles */
     roles?: string[];
     id: number;
