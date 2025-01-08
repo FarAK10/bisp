@@ -25,9 +25,6 @@ export class Lecture {
   @ManyToOne(() => Course, (course) => course.lectures)
   course: Course;
 
-  @OneToMany(() => Schedule, (schedule) => schedule.lecture)
-  schedules: Schedule[];
-
   @OneToMany(() => LectureMaterial, (material) => material.lecture)
   lectureMaterials: LectureMaterial[];
 

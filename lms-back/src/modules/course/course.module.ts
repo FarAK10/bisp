@@ -5,9 +5,14 @@ import { Course } from './entities/course.entity';
 import { CourseService } from './services/course.service';
 import { UserModule } from '@modules/user/user.module';
 import { StudentEnrollment } from './entities/student-entrollment.entity';
+import { ScheduleModule } from '@modules/schedule/schedule.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Course, StudentEnrollment]), UserModule],
+  imports: [
+    TypeOrmModule.forFeature([Course, StudentEnrollment]),
+    UserModule,
+    ScheduleModule,
+  ],
   controllers: [CourseController],
   providers: [CourseService],
   exports: [

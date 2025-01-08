@@ -13,8 +13,8 @@ import {
 import { LectureService } from '../services/lecture.service';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Role } from '@common/constants/roles.enum';
-import { CreateLectureDto } from '../dto/create-lecture.dto';
-import { UpdateLectureDto } from '../dto/update-lecture.dto';
+import { CreateLectureDto } from '../dto/lecture/create-lecture.dto';
+import { UpdateLectureDto } from '../dto/lecture/update-lecture.dto';
 import { Roles } from '@common/decorators/role.decorator';
 
 @Controller('courses/:courseId/lectures')

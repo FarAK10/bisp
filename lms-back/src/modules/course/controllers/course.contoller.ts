@@ -21,6 +21,7 @@ import { CourseService } from '../services/course.service';
 import { ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CourseTableResponseDto } from '../dto/table-response.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { ErrorResponse } from '@common/exceptions/base';
 @ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @ApiTags('courses') // Adds a "users" tag in Swagger
 @Controller('courses')
@@ -30,6 +31,7 @@ export class CourseController {
 
   @Post()
   @Roles(Role.Admin)
+  @ApiResponse({ status: 409, type: ErrorResponse })
   async create(@Body() createCourseDto: CreateCourseDto, @Request() req) {
     return this.courseService.create(createCourseDto, req.user.id);
   }
@@ -56,12 +58,13 @@ export class CourseController {
 
   @Put(':id')
   @Roles(Role.Professor, Role.Admin)
+  @ApiResponse({ status: 409, type: ErrorResponse })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCourseDto: UpdateCourseDto,
     @Request() req,
   ) {
-    return this.courseService.update(id, updateCourseDto, req.user);
+    return this.courseService.update(id, updateCourseDto);
   }
 
   @Delete(':id')

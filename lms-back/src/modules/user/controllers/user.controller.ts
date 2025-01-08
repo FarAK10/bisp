@@ -23,6 +23,7 @@ import { UserProfile } from '../services/user.profile';
 import { TableResponseDto } from '@common/dto/table.dto';
 import { ApiTableResponse } from '@common/decorators/table-response.decorator';
 import { UserTableResponseDto } from '../dto/table-response.dto';
+import { Role } from '@common/constants/roles.enum';
 @ApiTags('users') // Adds a "users" tag in Swagger
 @ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @Controller('users')
@@ -49,12 +50,19 @@ export class UserController {
   @ApiResponse({ type: UserTableResponseDto })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: Role,
+    description: 'Filter by user role',
+  })
   async getAllUsers(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('role') role?: Role,
   ): Promise<TableResponseDto<GetUserDto>> {
     try {
-      return this.userService.findAll(page, limit);
+      return this.userService.findAll(page, limit, role);
     } catch (err) {
       throw new BadRequestException(err.message);
     }

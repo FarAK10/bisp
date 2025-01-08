@@ -1,13 +1,33 @@
-@if (course(); as course) {
-<nz-card [nzTitle]="course.title" [nzActions]="[courseActions]">
-  <p>{{ course.description }}</p>
-  <div class="professor-info">
-    <p><strong>Professor:</strong> {{ course.professor.name }}</p>
-    <p><strong>Email:</strong> {{ course.professor.email }}</p>
+@if(course();as course){
+<nz-card
+  class="max-w-sm rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-105 bg-white"
+  [nzBordered]="false"
+  [nzHoverable]="true"
+>
+  <div class="p-4">
+    <div class="text-lg font-bold text-gray-800">{{ course.title }}</div>
+    <p class="mt-2 text-sm text-gray-600 line-clamp-3">
+      {{ course.description }}
+    </p>
+
+    <div class="mt-4 flex items-center space-x-4">
+      <div
+        class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xl"
+      >
+        {{ course.professor.firstName[0] }}{{ course.professor.lastName[0] }}
+      </div>
+      <div>
+        <div class="text-sm font-medium text-gray-800">
+          {{ course.professor.firstName }} {{ course.professor.lastName }}
+        </div>
+        <div class="text-xs text-gray-500">{{ course.professor.email }}</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <button (click)="viewCourse()" class="mx-auto block" nz-button>
+      View Details
+    </button>
   </div>
 </nz-card>
 }
-<ng-template #courseActions>
-  <a (click)="viewCourse()">View</a>
-  <a (click)="enrollInCourse()">Enroll</a>
-</ng-template>

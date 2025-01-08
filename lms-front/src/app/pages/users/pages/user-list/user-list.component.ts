@@ -1,4 +1,11 @@
-import { Component, computed, inject, model, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  model,
+  signal,
+} from '@angular/core';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import {
   GetUserDto,
@@ -25,6 +32,7 @@ import { MessageService } from '../../../../core/services';
   imports: [NzTableModule, CommonModule, FormsModule, NzButtonModule],
   templateUrl: './user-list.component.html',
   styleUrl: './user-list.component.less',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserListComponent {
   userClient = inject(UserControllerClient);
@@ -45,8 +53,12 @@ export class UserListComponent {
   users = computed(() => this.tableRes()?.data);
 
   total = computed(() => this.tableRes()?.count);
-  onPageIndexChange(index: number) {}
-  onPageSizeChange(size: number) {}
+  onPageIndexChange(index: number) {
+    this.page$.next(index);
+  }
+  onPageSizeChange(size: number) {
+    this.pageSize$.next(size);
+  }
   onCreate(): void {
     this.router.navigate(['create'], { relativeTo: this.route });
   }

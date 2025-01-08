@@ -34,7 +34,6 @@ export class RolesGuard implements CanActivateChild {
         }
       }),
       catchError((error) => {
-        console.error('RolesGuard error:', error);
         return of(false);
       })
     );
@@ -53,7 +52,6 @@ export class RolesGuard implements CanActivateChild {
 
     if (userRoles && userRoles.length > 0) {
       const hasRole = requiredRoles.some((role) => userRoles.includes(role));
-      console.log('RolesGuard - hasRole:', hasRole);
       return of(hasRole);
     } else {
       // User roles not loaded, deny access

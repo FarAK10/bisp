@@ -1,8 +1,11 @@
 import { User } from '@modules/user/entities/user.entity';
 import { UserService } from '@modules/user/services/user.service';
 import {
+  BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -24,7 +27,7 @@ export class AuthService {
     if (user && isPasswordValid) {
       return user;
     }
-    throw new UnauthorizedException('Invalid credentials');
+    throw new NotFoundException('Invalid credentials');
   }
   async login(email: string, password: string): Promise<TokenResponseDto> {
     const user = await this.validateUser(email, password);
@@ -49,7 +52,7 @@ export class AuthService {
 
       const user = await this.userService.findOne(payload.sub);
       if (!user) {
-        throw new UnauthorizedException('User not found');
+        throw new NotFoundException('User not found');
       }
 
       const newPayload = {
@@ -69,7 +72,7 @@ export class AuthService {
         refreshToken: newRefreshToken,
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new BadRequestException('Invalid refresh token');
     }
   }
 }

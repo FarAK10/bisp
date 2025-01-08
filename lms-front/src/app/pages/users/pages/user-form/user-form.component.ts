@@ -1,4 +1,11 @@
-import { Component, computed, effect, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  OnInit,
+} from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -34,6 +41,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
   ],
   templateUrl: './user-form.component.html',
   styleUrl: './user-form.component.less',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserFormComponent implements OnInit {
   route = inject(ActivatedRoute);
@@ -53,7 +61,6 @@ export class UserFormComponent implements OnInit {
 
   constructor() {}
   ngOnInit(): void {
-    console.log(this.roles);
     if (this.isEditMode()) {
       const passwordControl = this.createUserForm.controls.password;
       passwordControl.clearValidators();
@@ -115,7 +122,6 @@ export class UserFormComponent implements OnInit {
       lastName: formValue.lastName,
       roles: formValue.roles,
     };
-    console.log('update user', user);
     this.userClient.update(this.userId(), user).subscribe({
       next: () => {
         this.messageService.onNotifySuccess('User updated successfully');

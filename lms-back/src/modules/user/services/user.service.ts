@@ -46,28 +46,34 @@ export class UserService {
   async findAll(
     page?: number,
     limit?: number,
+    role?: Role,
   ): Promise<TableResponseDto<GetUserDto>> {
-    if (!page || !limit) {
-      const [data, count] = await this.userRepository.findAndCount();
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    // Apply role filter if provided
+    if (role) {
+      queryBuilder.andWhere(':role = ANY (user.roles)', { role });
+    }
+
+    // Add pagination
+    const currentPage = page && page > 0 ? page : 1;
+    const pageSize = limit && limit > 0 ? limit : 10;
+
+    queryBuilder.skip((currentPage - 1) * pageSize).take(pageSize);
+
+    try {
+      const [data, count] = await queryBuilder.getManyAndCount();
+
       return {
         data,
         count,
-        page: null,
-        limit: null,
+        page: currentPage,
+        limit: pageSize,
       };
+    } catch (error) {
+      console.error('Database query error:', error.message);
+      throw new BadRequestException('Failed to fetch users. Please try again.');
     }
-
-    const [data, count] = await this.userRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    return {
-      data,
-      count,
-      page,
-      limit,
-    };
   }
 
   async findByEmail(email: string): Promise<User> {

@@ -15,6 +15,7 @@ import { Assignment } from '@modules/assignment/entities/assignment.entity';
 import { Lecture } from '@modules/lecture/entities/lecture.entity';
 import { AttendanceRecord } from '@modules/attendance/entities/attendacne-record.entity';
 import { StudentEnrollment } from './student-entrollment.entity';
+import { Schedule } from '@modules/schedule/enitites/event.entity';
 
 @Entity('courses')
 export class Course {
@@ -44,6 +45,9 @@ export class Course {
 
   @OneToMany(() => Lecture, (lecture) => lecture.course)
   lectures: Lecture[];
+
+  @OneToMany(() => Schedule, (schedule) => schedule.course)
+  schedules: Schedule[];
 
   @OneToMany(() => AttendanceRecord, (record) => record.course)
   attendaceRecords: AttendanceRecord[];

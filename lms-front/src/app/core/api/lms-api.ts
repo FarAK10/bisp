@@ -17,7 +17,12 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 export interface IUserControllerClient {
     create(body: CreateUserDto): Observable<GetUserDto>;
-    getAllUsers(page: number | undefined, limit: number | undefined): Observable<UserTableResponseDto>;
+    /**
+     * @param page (optional) 
+     * @param limit (optional) 
+     * @param role (optional) Filter by user role
+     */
+    getAllUsers(page?: number | undefined, limit?: number | undefined, role?: Role | undefined): Observable<UserTableResponseDto>;
     getUserProfile(): Observable<GetUserDto>;
     getUserById(id: number): Observable<GetUserDto>;
     update(id: number, body: UpdateUserDto): Observable<GetUserDto>;
@@ -88,7 +93,12 @@ export class UserControllerClient implements IUserControllerClient {
         return _observableOf(null as any);
     }
 
-    getAllUsers(page: number | undefined, limit: number | undefined): Observable<UserTableResponseDto> {
+    /**
+     * @param page (optional) 
+     * @param limit (optional) 
+     * @param role (optional) Filter by user role
+     */
+    getAllUsers(page?: number | undefined, limit?: number | undefined, role?: Role | undefined): Observable<UserTableResponseDto> {
         let url_ = this.baseUrl + "/users?";
         if (page === null)
             throw new Error("The parameter 'page' cannot be null.");
@@ -98,6 +108,10 @@ export class UserControllerClient implements IUserControllerClient {
             throw new Error("The parameter 'limit' cannot be null.");
         else if (limit !== undefined)
             url_ += "limit=" + encodeURIComponent("" + limit) + "&";
+        if (role === null)
+            throw new Error("The parameter 'role' cannot be null.");
+        else if (role !== undefined)
+            url_ += "role=" + encodeURIComponent("" + role) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -339,8 +353,8 @@ export class UserControllerClient implements IUserControllerClient {
 
 export interface ICourseControllerClient {
     create(body: CreateCourseDto): Observable<void>;
-    getAll(): Observable<GetCourseDto[]>;
-    getById(id: number): Observable<void>;
+    getAll(page?: number | undefined, limit?: number | undefined): Observable<CourseTableResponseDto>;
+    getById(id: number): Observable<GetCourseDto>;
     update(id: number, body: UpdateCourseDto): Observable<void>;
     remove(id: number): Observable<void>;
     enroll(id: number): Observable<void>;
@@ -396,9 +410,11 @@ export class CourseControllerClient implements ICourseControllerClient {
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        if (status === 409) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("A server side error occurred.", status, _responseText, _headers, result409);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -408,8 +424,16 @@ export class CourseControllerClient implements ICourseControllerClient {
         return _observableOf(null as any);
     }
 
-    getAll(): Observable<GetCourseDto[]> {
-        let url_ = this.baseUrl + "/courses";
+    getAll(page?: number | undefined, limit?: number | undefined): Observable<CourseTableResponseDto> {
+        let url_ = this.baseUrl + "/courses?";
+        if (page === null)
+            throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (limit === null)
+            throw new Error("The parameter 'limit' cannot be null.");
+        else if (limit !== undefined)
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -427,14 +451,14 @@ export class CourseControllerClient implements ICourseControllerClient {
                 try {
                     return this.processGetAll(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<GetCourseDto[]>;
+                    return _observableThrow(e) as any as Observable<CourseTableResponseDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<GetCourseDto[]>;
+                return _observableThrow(response_) as any as Observable<CourseTableResponseDto>;
         }));
     }
 
-    protected processGetAll(response: HttpResponseBase): Observable<GetCourseDto[]> {
+    protected processGetAll(response: HttpResponseBase): Observable<CourseTableResponseDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -444,13 +468,13 @@ export class CourseControllerClient implements ICourseControllerClient {
         {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let resultdefault: any = null;
-            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetCourseDto[];
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CourseTableResponseDto;
             return _observableOf(resultdefault);
             }));
         }
     }
 
-    getById(id: number): Observable<void> {
+    getById(id: number): Observable<GetCourseDto> {
         let url_ = this.baseUrl + "/courses/{id}";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
@@ -461,6 +485,7 @@ export class CourseControllerClient implements ICourseControllerClient {
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/json"
             })
         };
 
@@ -471,30 +496,27 @@ export class CourseControllerClient implements ICourseControllerClient {
                 try {
                     return this.processGetById(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<GetCourseDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<GetCourseDto>;
         }));
     }
 
-    protected processGetById(response: HttpResponseBase): Observable<void> {
+    protected processGetById(response: HttpResponseBase): Observable<GetCourseDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetCourseDto;
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
     update(id: number, body: UpdateCourseDto): Observable<void> {
@@ -536,9 +558,11 @@ export class CourseControllerClient implements ICourseControllerClient {
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        if (status === 409) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("A server side error occurred.", status, _responseText, _headers, result409);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -678,6 +702,169 @@ export class CourseControllerClient implements ICourseControllerClient {
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+export interface IScheduleControllerClient {
+    create(body: CreateScheduleDto): Observable<void>;
+    findAll(): Observable<GetScheduleDto[]>;
+    findByWeek(weekStart: Date): Observable<void>;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+export class ScheduleControllerClient implements IScheduleControllerClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    create(body: CreateScheduleDto): Observable<void> {
+        let url_ = this.baseUrl + "/schedules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCreate(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCreate(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processCreate(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    findAll(): Observable<GetScheduleDto[]> {
+        let url_ = this.baseUrl + "/schedules";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processFindAll(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processFindAll(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetScheduleDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetScheduleDto[]>;
+        }));
+    }
+
+    protected processFindAll(response: HttpResponseBase): Observable<GetScheduleDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetScheduleDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    findByWeek(weekStart: Date): Observable<void> {
+        let url_ = this.baseUrl + "/schedules/week?";
+        if (weekStart === undefined || weekStart === null)
+            throw new Error("The parameter 'weekStart' must be defined and cannot be null.");
+        else
+            url_ += "weekStart=" + encodeURIComponent(weekStart ? "" + weekStart.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processFindByWeek(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processFindByWeek(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processFindByWeek(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return _observableOf(null as any);
             }));
@@ -1080,7 +1267,7 @@ export interface ILectureMaterialsControllerClient {
     /**
      * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
      */
-    uploadMaterial(lectureId: number, file: FileParameter | undefined): Observable<void>;
+    uploadMaterial(lectureId: number, file?: FileParameter | undefined): Observable<void>;
     getMaterialsByLecture(lectureId: number): Observable<void>;
     downloadMaterial(materialId: number): Observable<void>;
     deleteMaterial(materialId: number): Observable<void>;
@@ -1102,7 +1289,7 @@ export class LectureMaterialsControllerClient implements ILectureMaterialsContro
     /**
      * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
      */
-    uploadMaterial(lectureId: number, file: FileParameter | undefined): Observable<void> {
+    uploadMaterial(lectureId: number, file?: FileParameter | undefined): Observable<void> {
         let url_ = this.baseUrl + "/lectures/{lectureId}/materials/upload";
         if (lectureId === undefined || lectureId === null)
             throw new Error("The parameter 'lectureId' must be defined.");
@@ -1279,166 +1466,6 @@ export class LectureMaterialsControllerClient implements ILectureMaterialsContro
     }
 
     protected processDeleteMaterial(response: HttpResponseBase): Observable<void> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-}
-
-export interface IScheduleControllerClient {
-    create(body: CreateScheduleDto): Observable<void>;
-    findAll(): Observable<void>;
-    findByWeek(weekStart: Date): Observable<void>;
-}
-
-@Injectable({
-    providedIn: 'root'
-})
-export class ScheduleControllerClient implements IScheduleControllerClient {
-    private http: HttpClient;
-    private baseUrl: string;
-    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
-
-    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
-        this.http = http;
-        this.baseUrl = baseUrl ?? "";
-    }
-
-    create(body: CreateScheduleDto): Observable<void> {
-        let url_ = this.baseUrl + "/schedules";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processCreate(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processCreate(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<void>;
-        }));
-    }
-
-    protected processCreate(response: HttpResponseBase): Observable<void> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    findAll(): Observable<void> {
-        let url_ = this.baseUrl + "/schedules";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processFindAll(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processFindAll(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<void>;
-        }));
-    }
-
-    protected processFindAll(response: HttpResponseBase): Observable<void> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    findByWeek(weekStart: Date): Observable<void> {
-        let url_ = this.baseUrl + "/schedules/week?";
-        if (weekStart === undefined || weekStart === null)
-            throw new Error("The parameter 'weekStart' must be defined and cannot be null.");
-        else
-            url_ += "weekStart=" + encodeURIComponent(weekStart ? "" + weekStart.toISOString() : "") + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processFindByWeek(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processFindByWeek(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<void>;
-        }));
-    }
-
-    protected processFindByWeek(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -2203,6 +2230,122 @@ export class AttendanceControllerClient implements IAttendanceControllerClient {
     }
 }
 
+export interface IBadgeControllerClient {
+    assignBadge(userId: number, badgeId: number): Observable<void>;
+    getUserBadges(userId: number): Observable<void>;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+export class BadgeControllerClient implements IBadgeControllerClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    assignBadge(userId: number, badgeId: number): Observable<void> {
+        let url_ = this.baseUrl + "/badges/{userId}/assign/{badgeId}";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (badgeId === undefined || badgeId === null)
+            throw new Error("The parameter 'badgeId' must be defined.");
+        url_ = url_.replace("{badgeId}", encodeURIComponent("" + badgeId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processAssignBadge(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processAssignBadge(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processAssignBadge(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    getUserBadges(userId: number): Observable<void> {
+        let url_ = this.baseUrl + "/badges/{userId}";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetUserBadges(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetUserBadges(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processGetUserBadges(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
 export interface CreateUserDto {
     email: string;
     password: string;
@@ -2248,23 +2391,94 @@ export interface UpdateUserDto {
     [key: string]: any;
 }
 
+export interface CreateScheduleDto {
+    startTime: Date;
+    endTime: Date;
+    dayOfWeek: number;
+    type: string;
+    roomNumber: string;
+    lectureId: number;
+
+    [key: string]: any;
+}
+
 export interface CreateCourseDto {
     title: string;
     description: string;
+    schedules: CreateScheduleDto[];
+    professorId: number;
+
+    [key: string]: any;
+}
+
+export interface ErrorResponse {
+    message: string;
+    status: number;
+    error: string;
+
+    [key: string]: any;
+}
+
+export interface GetBaseUserDto {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    id: number;
+
+    [key: string]: any;
+}
+
+export interface GetScheduleDto {
+    startTime: Date;
+    endTime: Date;
+    dayOfWeek: number;
+    type: string;
+    roomNumber: string;
+    id: number;
 
     [key: string]: any;
 }
 
 export interface GetCourseDto {
+    id: number;
     title: string;
     description: string;
-    professor: GetUserDto;
+    professor: GetBaseUserDto;
+    schedules: GetScheduleDto[];
+
+    [key: string]: any;
+}
+
+export interface CourseTableResponseDto {
+    data: GetCourseDto[];
+    count: number;
+    page: number;
+    limit: number;
+
+    [key: string]: any;
+}
+
+export interface UpdateScheduleDto {
+    startTime?: Date;
+    endTime?: Date;
+    dayOfWeek?: number;
+    type?: string;
+    roomNumber?: string;
+    lectureId?: number;
+    /** Unique identifier for the schedule */
+    id: number;
 
     [key: string]: any;
 }
 
 export interface UpdateCourseDto {
+    title?: string;
+    description?: string;
+    schedules?: CreateScheduleDto[];
+    professorId?: number;
     id: number;
+    updatedSchedules: UpdateScheduleDto[];
+    newSchedules: UpdateScheduleDto[];
 
     [key: string]: any;
 }
@@ -2290,17 +2504,6 @@ export interface RefreshTokenDto {
     [key: string]: any;
 }
 
-export interface CreateScheduleDto {
-    lectureId: number;
-    startTime: Date;
-    endTime: Date;
-    dayOfWeek: number;
-    type: string;
-    roomNumber: string;
-
-    [key: string]: any;
-}
-
 export interface CreateLectureDto {
     title: string;
     description: string;
@@ -2309,24 +2512,10 @@ export interface CreateLectureDto {
     [key: string]: any;
 }
 
-export interface UpdateScheduleDto {
-    lectureId?: number;
-    startTime?: Date;
-    endTime?: Date;
-    dayOfWeek?: number;
-    type?: string;
-    roomNumber?: string;
-    /** Unique identifier for the schedule */
-    id: number;
-
-    [key: string]: any;
-}
-
 export interface UpdateLectureDto {
     title?: string;
     description?: string;
     id: number;
-    schedules: UpdateScheduleDto[];
 
     [key: string]: any;
 }
@@ -2361,6 +2550,12 @@ export interface CreateAttendanceRecordDto {
     tracking_method: string;
 
     [key: string]: any;
+}
+
+export enum Role {
+    Student = "Student",
+    Professor = "Professor",
+    Admin = "Admin",
 }
 
 export interface FileParameter {

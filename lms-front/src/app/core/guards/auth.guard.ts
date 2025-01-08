@@ -9,6 +9,8 @@ import {
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap, take } from 'rxjs/operators';
 import { AuthStore } from '../../store/auth';
+import { ROOT_ROUTES } from '../constants';
+import { AUTH_ROUTES } from '../constants/routes/auth';
 
 @Injectable({
   providedIn: 'root',
@@ -26,9 +28,12 @@ export class AuthGuard implements CanActivate {
           return true;
         } else {
           // Redirect to login page
-          return this.router.createUrlTree(['/login'], {
-            queryParams: { returnUrl: state.url },
-          });
+          return this.router.createUrlTree(
+            [ROOT_ROUTES.auth, AUTH_ROUTES.login],
+            {
+              queryParams: { returnUrl: state.url },
+            }
+          );
         }
       }),
       catchError((error) => {

@@ -25,11 +25,15 @@
     </nz-form-control>
   </nz-form-item>
 
-  <nz-form-item>
-    <nz-form-control>
-      <button nz-button nzType="primary" [disabled]="loginForm.invalid">
-        Log in
-      </button>
-    </nz-form-control>
-  </nz-form-item>
+  <div class="flex justify-center">
+    <button
+      [nzLoading]="isloading()"
+      [disabled]="isloading()"
+      nz-button
+      nzType="primary"
+      [disabled]="loginForm.invalid"
+    >
+      Log in
+    </button>
+  </div>
 </form>

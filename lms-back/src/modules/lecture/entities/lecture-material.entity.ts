@@ -35,8 +35,6 @@ export class LectureMaterial {
   @CreateDateColumn()
   uploadedAt: Date;
 
-  @OneToMany(() => Schedule, (schedule) => schedule.lecture)
-  schedules: Schedule[];
   @ManyToOne(() => Lecture, (lecture) => lecture.lectureMaterials)
   lecture: Lecture;
 

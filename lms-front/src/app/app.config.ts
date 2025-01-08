@@ -14,6 +14,8 @@ import { JWT_OPTIONS, JwtHelperService, JwtModule } from '@auth0/angular-jwt';
 import { jwtOptionsFactory } from './core/utils/jwt-factory';
 import { StorageService } from './core/services/storage.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { registerLocaleData } from '@angular/common';
+import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -33,6 +35,7 @@ export const appConfig: ApplicationConfig = {
         },
       })
     ),
+    provideNzI18n(en_US),
     importProvidersFrom(BrowserAnimationsModule),
   ],
 };

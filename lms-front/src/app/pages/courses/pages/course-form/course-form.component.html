@@ -1,1 +1,123 @@
-<p>course-form works!</p>
+<button (click)="back()" nzType="primary" class="w-40 ml-4 mb-3" nz-button>
+  back
+</button>
+<nz-card class="max-w-3xl w-full mx-auto mt-6">
+  <form [formGroup]="courseForm" nz-form>
+    <div nz-form-item nz-row>
+      <div nz-form-label nz-col [nzSpan]="6">
+        <label for="title">Course Title</label>
+      </div>
+      <div nz-form-control nz-col [nzSpan]="18">
+        <input
+          nz-input
+          id="title"
+          formControlName="title"
+          placeholder="Enter course title"
+        />
+        <div
+          *ngIf="
+            courseForm.get('title')?.invalid && courseForm.get('title')?.touched
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          Title is required and should not exceed 100 characters.
+        </div>
+      </div>
+    </div>
+
+    <div nz-form-item nz-row class="mt-4">
+      <div nz-form-label nz-col [nzSpan]="6">
+        <label for="description">Description</label>
+      </div>
+      <div nz-form-control nz-col [nzSpan]="18">
+        <textarea
+          nz-input
+          id="description"
+          formControlName="description"
+          rows="4"
+          placeholder="Enter course description"
+        ></textarea>
+        <div
+          *ngIf="
+            courseForm.get('description')?.invalid &&
+            courseForm.get('description')?.touched
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          Description is required and should not exceed 500 characters.
+        </div>
+      </div>
+    </div>
+
+    <div nz-form-item nz-row class="mt-4">
+      <div nz-form-label nz-col [nzSpan]="6">
+        <label for="professor">Professor</label>
+      </div>
+      <div nz-form-control nz-col [nzSpan]="18">
+        <nz-select
+          class="w-full"
+          id="professor"
+          formControlName="professorId"
+          placeholder="Select a professor"
+          [nzLoading]="professors().length === 0"
+        >
+          @for(professor of professors();track professor.id){<nz-option
+            [nzValue]="professor.id"
+            [nzLabel]="professor.firstName + ' ' + professor.lastName"
+          ></nz-option
+          >}
+        </nz-select>
+
+        <div
+          *ngIf="
+            courseForm.get('professorId')?.invalid &&
+            courseForm.get('professorId')?.touched
+          "
+          class="text-red-500 text-sm mt-1"
+        >
+          Please select a professor.
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium">Course Schedules</h3>
+        <button nz-button (click)="addSchedule()" type="button">
+          Add Schedule
+        </button>
+      </div>
+
+      <div formArrayName="schedules">
+        @for(schedule of schedules.controls; track schedule; let i = $index){
+        <div class="relative">
+          <app-schedule-form [formControlName]="i"></app-schedule-form>
+          <button
+            nz-button
+            nzDanger
+            class="absolute top-0 right-4"
+            (click)="removeSchedule(i)"
+            type="button"
+          >
+            Remove
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div nz-form-item nz-row class="mt-6">
+      <div nz-form-control nz-col [nzSpan]="24" class="text-center">
+        <button
+          nz-button
+          nzType="primary"
+          (click)="submit()"
+          [disabled]="isLoading() || this.courseForm.invalid"
+          [nzLoading]="isLoading()"
+        >
+          {{ label() }}
+        </button>
+      </div>
+    </div>
+  </form>
+</nz-card>

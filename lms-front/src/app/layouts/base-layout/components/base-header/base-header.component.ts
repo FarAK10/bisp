@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzIconDirective } from 'ng-zorro-antd/icon';
 import { AuthStore } from '../../../../store/auth';
+import { ROOT_ROUTES } from '../../../../core/constants';
+import { AUTH_ROUTES } from '../../../../core/constants/routes/auth';
 
 @Component({
   selector: 'dash-base-header',
@@ -34,5 +36,6 @@ export class BaseHeaderComponent {
 
   logout(): void {
     this.authStore.signOut();
+    this.router.navigate([ROOT_ROUTES.auth, AUTH_ROUTES.login]);
   }
 }

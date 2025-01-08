@@ -1,0 +1,94 @@
+<div [formGroup]="form" class="border p-4 mb-4 rounded-lg">
+  <div class="grid grid-cols-2 gap-4">
+    <div nz-form-item>
+      <label>Start Time</label>
+      <nz-time-picker
+        class="w-full"
+        formControlName="startTime"
+        [nzFormat]="'HH:mm'"
+      ></nz-time-picker>
+      <div
+        *ngIf="form.get('startTime')?.errors?.['required'] && form.get('startTime')?.touched"
+        class="text-red-500 text-sm mt-1"
+      >
+        Start time is required
+      </div>
+    </div>
+
+    <div nz-form-item>
+      <label>End Time</label>
+      <nz-time-picker
+        class="w-full"
+        formControlName="endTime"
+        [nzFormat]="'HH:mm'"
+      ></nz-time-picker>
+      <div
+        *ngIf="form.get('endTime')?.errors?.['required'] && form.get('endTime')?.touched"
+        class="text-red-500 text-sm mt-1"
+      >
+        End time is required
+      </div>
+    </div>
+
+    <div nz-form-item>
+      <label>Day of Week</label>
+      <nz-select formControlName="dayOfWeek" class="w-full">
+        @for(day of weekDays; track day){
+        <nz-option [nzValue]="day.value" [nzLabel]="day.label"></nz-option>
+        }
+      </nz-select>
+      <div
+        *ngIf="form.get('dayOfWeek')?.errors?.['required'] && form.get('dayOfWeek')?.touched"
+        class="text-red-500 text-sm mt-1"
+      >
+        Day of week is required
+      </div>
+    </div>
+
+    <div nz-form-item>
+      <label>Type</label>
+      <nz-select formControlName="type" class="w-full">
+        @for(type of eventTypes; track type){
+        <nz-option [nzValue]="type.value" [nzLabel]="type.label"></nz-option>
+        }
+      </nz-select>
+      <div
+        *ngIf="form.get('type')?.errors?.['required'] && form.get('type')?.touched"
+        class="text-red-500 text-sm mt-1"
+      >
+        Type is required
+      </div>
+    </div>
+
+    <div nz-form-item>
+      <label>Room Number</label>
+      <input
+        nz-input
+        formControlName="roomNumber"
+        placeholder="Enter room number"
+      />
+      <div
+        *ngIf="form.get('roomNumber')?.errors?.['required'] && form.get('roomNumber')?.touched"
+        class="text-red-500 text-sm mt-1"
+      >
+        Room number is required
+      </div>
+    </div>
+
+    <!-- <div nz-form-item>
+      <label>Lecture ID</label>
+      <input
+        nz-input
+        type="number"
+        formControlName="lectureId"
+        placeholder="Enter lecture ID"
+      />
+      <div
+        *ngIf="form.get('lectureId')?.errors?.['required'] && form.get('lectureId')?.touched"
+        class="text-red-500 text-sm mt-1"
+      >
+        Lecture ID is required
+      </div>
+    </div> -->
+  </div>
+</div>

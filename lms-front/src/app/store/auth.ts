@@ -1,5 +1,5 @@
 import { computed, inject, Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import {
   signalStore,
@@ -10,7 +10,16 @@ import {
   withHooks,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { Observable, pipe, tap, switchMap, from, finalize } from 'rxjs';
+import {
+  Observable,
+  pipe,
+  tap,
+  switchMap,
+  from,
+  finalize,
+  catchError,
+  throwError,
+} from 'rxjs';
 import {
   GetUserDto,
   UserControllerClient,
@@ -39,6 +48,7 @@ export class AuthStore extends signalStore(
       const jwt = inject(JwtHelperService);
       const storage = inject(StorageService);
       const token = storage.accessToken;
+
       return !!token && !jwt.isTokenExpired(token);
     }),
     userRoles: computed(() => user()?.roles),
@@ -48,6 +58,7 @@ export class AuthStore extends signalStore(
     const router = inject(Router);
     const storage = inject(StorageService);
     const authService = inject(AuthService);
+    const route = inject(ActivatedRoute);
 
     const loadUser = (): Observable<GetUserDto> => {
       patchState(store, { isLoading: true });
@@ -57,35 +68,44 @@ export class AuthStore extends signalStore(
           next: (user: GetUserDto) => {
             patchState(store, { user, error: null });
           },
-          error: (error) => {
-            patchState(store, { error: error.message });
-          },
           finalize: () => {
             patchState(store, { isLoading: false });
           },
+        }),
+        catchError((error) => {
+          patchState(store, { error: error.message });
+          return throwError(() => error);
         })
       );
     };
 
-    const signIn = rxMethod<LoginDto>(
-      pipe(
-        tap(() => patchState(store, { isLoading: true })),
-        switchMap((credentials) =>
-          authService.signIn(credentials).pipe(
-            switchMap(() => loadUser()),
-            tap({
-              next: () => {
-                router.navigate(['']);
-              },
-              error: (error) => patchState(store, { error: error.message }),
-              complete() {
-                patchState(store, { isLoading: false });
-              },
-            })
-          )
-        )
-      )
-    );
+    const signIn = (credentials: LoginDto): Observable<GetUserDto> => {
+      patchState(store, { isLoading: true, error: null });
+
+      return authService.signIn(credentials).pipe(
+        switchMap(() => loadUser()),
+        tap({
+          next: () => {
+            const query = route.snapshot.queryParams['returnUrl'];
+            if (query) {
+              router.navigateByUrl(query);
+              return;
+            }
+            router.navigate(['']);
+          },
+          complete: () => {
+            patchState(store, { isLoading: false });
+          },
+        }),
+        catchError((error) => {
+          patchState(store, {
+            error: error.message,
+            isLoading: false,
+          });
+          return throwError(() => error);
+        })
+      );
+    };
 
     return {
       loadUser,
@@ -102,6 +122,7 @@ export class AuthStore extends signalStore(
   withHooks({
     onInit(store) {
       if (store.isAuthenticated() && !store.user()) {
+        //   store.loadUser();
       }
     },
   })

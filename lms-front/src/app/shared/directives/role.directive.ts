@@ -37,10 +37,7 @@ export class PermissionDirective implements AfterViewInit {
   }
 
   private checkPermissions(): void {
-    console.log(this.authStrore);
-    console.log(this.authStrore.isAuthenticated());
     const user = this.user();
-    console.log(user);
     if (doesUserHasPermission(user.roles as Role[], this.roles())) {
       this.viewContainer.createEmbeddedView(this.templateRef);
     } else {

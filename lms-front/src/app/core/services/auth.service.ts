@@ -9,7 +9,7 @@ import {
   LoginDto,
 } from '../api/lms-api';
 import { StorageService } from './storage.service';
-import { Observable, tap, map } from 'rxjs';
+import { Observable, tap, map, catchError, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -23,12 +23,14 @@ export class AuthService {
    * Sign in: calls login endpoint and stores the tokens.
    */
   signIn(credentials: LoginDto): Observable<TokenResponseDto> {
+    console.log('Signing in with credentials:', credentials);
     return this.authClient.login(credentials).pipe(
       tap((response: TokenResponseDto) => {
         // Save tokens
         this.storageService.accessToken = response.accessToken;
         this.storageService.refreshToken = response.refreshToken;
-      })
+      }),
+      catchError((error) => throwError(() => error))
     );
   }
 

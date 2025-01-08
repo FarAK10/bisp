@@ -1,30 +1,11 @@
 // dto/create-schedule.dto.ts
 import { IsDate, IsEnum, IsNumber, IsString } from 'class-validator';
 import { EventType } from '../enitites/event.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { BaseScheduleDto, GetScheduleDto } from './get-scedule.dto';
 
-export class CreateScheduleDto {
+export class CreateScheduleDto extends BaseScheduleDto {
   @ApiProperty()
   @IsNumber()
   lectureId: number;
-
-  @ApiProperty()
-  @IsDate()
-  startTime: Date;
-
-  @ApiProperty()
-  @IsDate()
-  endTime: Date;
-
-  @ApiProperty()
-  @IsNumber()
-  dayOfWeek: number;
-
-  @ApiProperty()
-  @IsEnum(EventType)
-  type: EventType;
-
-  @ApiProperty()
-  @IsString()
-  roomNumber: string;
 }

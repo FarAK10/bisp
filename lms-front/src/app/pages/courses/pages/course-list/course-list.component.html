@@ -1,0 +1,11 @@
+<div class="flex justify-end mb-2">
+  <button nz-button nzType="primary" (click)="onCreate()">Create</button>
+</div>
+<div class="flex flex-wrap gap-4">
+  @for(course of courses();track course.id){
+  <app-course-card
+    (onViewCourse)="onEdit($event)"
+    [course]="course"
+  ></app-course-card
+  >}
+</div>

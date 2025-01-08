@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
 import { Lecture } from '@modules/lecture/entities';
+import { Course } from '@modules/course/entities/course.entity';
 
 export enum EventType {
   Lecture = 'lecture',
@@ -20,8 +21,8 @@ export class Schedule {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Lecture, (lecture) => lecture.schedules)
-  lecture: Lecture;
+  @ManyToOne(() => Course, (course) => course.schedules)
+  course: Course;
 
   @Column()
   startTime: Date;

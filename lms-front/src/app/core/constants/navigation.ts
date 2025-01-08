@@ -12,5 +12,13 @@ export const APP_ROUTES: AppRoute[] = [
     icon: 'user',
     roles: [Role.Admin],
   },
+  {
+    path: ROOT_ROUTES.courses,
+    loadChildren: () =>
+      import('../../pages/courses/routes').then((m) => m.routes),
+    title: 'Courses',
+    icon: 'book',
+    roles: [Role.Admin, Role.Professor],
+  },
 ];
 export const NAVIGATION: NavigationItem[] = buildNavigation(APP_ROUTES);

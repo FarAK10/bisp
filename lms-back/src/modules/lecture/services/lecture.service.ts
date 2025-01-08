@@ -9,8 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Lecture } from '../entities/lecture.entity';
 import { Repository } from 'typeorm';
 import { Course } from '@modules/course/entities/course.entity';
-import { CreateLectureDto } from '../dto/create-lecture.dto';
-import { UpdateLectureDto } from '../dto/update-lecture.dto';
+import { CreateLectureDto } from '../dto/lecture/create-lecture.dto';
+import { UpdateLectureDto } from '../dto/lecture/update-lecture.dto';
 import { CourseService } from '@modules/course/services/course.service';
 import { ScheduleService } from '@modules/schedule/services/schedule.service';
 import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
@@ -37,21 +37,6 @@ export class LectureService {
       throw new NotFoundException('Course not found.');
     }
 
-    // Check for schedule conflicts before creating lecture
-    for (const scheduleDto of createLectureDto.schedules) {
-      const hasConflict = await this.scheduleService.checkScheduleConflicts(
-        scheduleDto.startTime,
-        scheduleDto.endTime,
-        scheduleDto.dayOfWeek,
-        scheduleDto.roomNumber,
-      );
-      if (hasConflict) {
-        throw new ConflictException(
-          `Schedule conflict detected for room ${scheduleDto.roomNumber} at the specified time`,
-        );
-      }
-    }
-
     // Create lecture with course reference
     const { schedules, ...lectureData } = createLectureDto;
     const lecture = this.lecturesRepository.create({
@@ -66,7 +51,6 @@ export class LectureService {
     );
 
     // Update lecture with schedules
-    savedLecture.schedules = createdSchedules;
     return savedLecture;
   }
 
@@ -79,48 +63,19 @@ export class LectureService {
   ): Promise<Lecture> {
     const lecture = await this.lecturesRepository.findOne({
       where: { id: lectureId },
-      relations: ['course', 'course.professor', 'schedules'],
+      relations: ['course', 'course.professor'],
     });
 
     if (!lecture) {
       throw new NotFoundException('Lecture not found.');
     }
 
-    if (updateLectureDto.schedules) {
-      // Delete existing schedules
-      if (lecture.schedules) {
-        await this.scheduleService.deleteSchedules(lecture.schedules);
-      }
+    // Combine new and updated schedules
+    const { ...lectureData } = updateLectureDto;
 
-      // Check for conflicts with new schedules
-      for (const scheduleDto of updateLectureDto.schedules) {
-        const hasConflict = await this.scheduleService.checkScheduleConflicts(
-          scheduleDto.startTime,
-          scheduleDto.endTime,
-          scheduleDto.dayOfWeek,
-          scheduleDto.roomNumber,
-        );
-        if (hasConflict) {
-          throw new ConflictException(
-            `Schedule conflict detected for room ${scheduleDto.roomNumber} at the specified time`,
-          );
-        }
-      }
-
-      // Create new schedules
-      const { schedules, ...lectureData } = updateLectureDto;
-      Object.assign(lecture, lectureData);
-      const savedLecture = await this.lecturesRepository.save(lecture);
-
-      const createdSchedules = await Promise.all(
-        schedules.map((scheduleDto) =>
-          this.scheduleService.update(scheduleDto.id, scheduleDto),
-        ),
-      );
-
-      savedLecture.schedules = createdSchedules;
-      return savedLecture;
-    }
+    // Update lecture details
+    Object.assign(lecture, lectureData);
+    return this.lecturesRepository.save(lecture);
   }
 
   // Get lectures for a course
