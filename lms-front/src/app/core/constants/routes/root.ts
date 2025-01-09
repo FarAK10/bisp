@@ -3,4 +3,5 @@ export enum ROOT_ROUTES {
   users = 'users',
   courses = 'courses',
   myCourses = 'my-courses',
+  lectures = 'lectures'
 }

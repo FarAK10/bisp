@@ -86,7 +86,6 @@ export class CourseFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.courseForm.valueChanges.subscribe((v) => console.log(this.courseForm));
     if (this.isEdit()) {
       const course = this.courseDetails();
       this.courseForm.patchValue({
