@@ -69,10 +69,12 @@ export class AuthStore extends signalStore(
       return userClient.getUserProfile().pipe(
         tap({
           next: (user: GetUserDto) => {
-            patchState(store, { user, error: null, });
-            if(!storage.userRole){
-               patchState(store,{selectedRole: user.roles[0] as Role})
-            }
+            const userRole =  storage.userRole || user.roles[0] as Role;
+
+            patchState(store, { user, error: null,selectedRole:userRole });
+
+         
+            console.log(store.selectedRole())
           },
           finalize: () => {
             patchState(store, { isLoading: false });
