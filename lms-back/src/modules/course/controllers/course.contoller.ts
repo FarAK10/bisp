@@ -20,6 +20,7 @@ import { GetCourseDto } from '../dto/get-course.dto';
 import { CourseService } from '../services/course.service';
 import {
   ApiInternalServerErrorResponse,
+  ApiOperation,
   ApiProperty,
   ApiQuery,
   ApiResponse,
@@ -28,6 +29,10 @@ import {
 import { CourseTableResponseDto } from '../dto/table-response.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ErrorResponse } from '@common/exceptions/base';
+import { ProfessorCoursesFilterDto } from '../dto/professor-course-fitler.dto';
+import { StudentCoursesFilterDto } from '../dto/student-course-filter.dto';
+import { GetEnrolledCourseDto } from '../dto/get-enrolled-course.dto';
+import { CourseWithLecturesResponseDto } from '../dto/course-with-lectures.dto';
 @ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @ApiTags('courses') // Adds a "users" tag in Swagger
 @Controller('courses')
@@ -49,9 +54,40 @@ export class CourseController {
   @Get()
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @Roles(Role.Admin)
   async getAll(@Query('page') page?: number, @Query('limit') limit?: number) {
     return this.courseService.findAll(page, limit);
+  }
+
+  @Get('student-courses')
+  @Roles(Role.Student)
+  @ApiOperation({ summary: "Get student's enrolled courses" })
+  @ApiResponse({ status: 200, type: [GetEnrolledCourseDto] })
+
+  getStudentCourses(
+    @Request() req,
+    @Query() filters: StudentCoursesFilterDto,
+  ) {
+    return this.courseService.getStudentsCourses(req.user.id, filters);
+  }
+
+  @Get('professor-courses')
+  @Roles(Role.Professor)
+  @ApiOperation({ summary: "Get professor's courses" })
+  @ApiResponse({ status: 200, type: [GetEnrolledCourseDto] })
+  getProfessorCourses(
+    @Request() req,
+    @Query() filters: ProfessorCoursesFilterDto,
+  ) {
+    return this.courseService.getProffessorCourses(req.user.id, filters);
+  }
+
+  @ApiResponse({
+    type:CourseWithLecturesResponseDto,
+  })
+  @Get('withLectures/:id')
+  @Roles(Role.Admin,Role.Professor,Role.Student)
+  async getCourseDetailsWithLecturesById(@Param('id', ParseIntPipe) courseId: number) {
+    return this.courseService.getCourseWithLecturesById(courseId);
   }
 
   @ApiResponse({

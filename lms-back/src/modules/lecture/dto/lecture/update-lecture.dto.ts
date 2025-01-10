@@ -12,9 +12,7 @@ import { UpdateScheduleDto } from '@modules/schedule/dto/update-schedule.dto';
 import { Type } from 'class-transformer';
 import { CreateScheduleDto } from '@modules/schedule/dto/create-schedule.dto';
 
-export class UpdateLectureDto extends PartialType(
-  OmitType(CreateLectureDto, ['schedules'] as const),
-) {
+export class UpdateLectureDto extends CreateLectureDto {
   @ApiProperty()
   @IsNotEmpty()
   id: number;

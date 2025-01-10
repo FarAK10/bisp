@@ -12,10 +12,4 @@ export class CreateLectureDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @ApiProperty({ type: [CreateScheduleDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateScheduleDto)
-  schedules: CreateScheduleDto[];
 }

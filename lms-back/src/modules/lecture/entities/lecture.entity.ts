@@ -23,6 +23,7 @@ export class Lecture {
   description: string;
 
   @ManyToOne(() => Course, (course) => course.lectures)
+  
   course: Course;
 
   @OneToMany(() => LectureMaterial, (material) => material.lecture)

@@ -17,7 +17,7 @@ export class LectureMaterial {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: true }) // Make title optional
   title: string;
 
   @Column()
@@ -35,8 +35,9 @@ export class LectureMaterial {
   @CreateDateColumn()
   uploadedAt: Date;
 
-  @ManyToOne(() => Lecture, (lecture) => lecture.lectureMaterials)
-  lecture: Lecture;
+  @ManyToOne(() => Lecture, (lecture) => lecture.lectureMaterials, {
+    onDelete: 'CASCADE' 
+  })  lecture: Lecture;
 
   @ManyToOne(() => Course, (course) => course.professor)
   uploadedBy: User;

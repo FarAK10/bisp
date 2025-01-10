@@ -8,7 +8,9 @@ import {
   ValidateNested,
   IsString,
   IsNumber,
+  IsDate,
 } from 'class-validator';
+import { GetLectureMaterialDto } from '../lecture-material/get-lecture-material.dto';
 
 export class BaseLectureDTto {
   @ApiProperty()
@@ -43,4 +45,36 @@ export class GetLectureDto extends BaseLectureDTto {
   @ValidateNested({ each: true })
   @Type(() => GetCourseDto)
   course: GetCourseDto
+}
+
+export class LectureDto {
+  @ApiProperty()
+  @IsNumber()
+  id: number;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  createdAt: Date;
+
+  @ApiProperty()
+  @IsDate()
+  @Type(() => Date)
+  updatedAt: Date;
+
+  @ApiProperty({ type: [GetLectureMaterialDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => GetLectureMaterialDto)
+  materials: GetLectureMaterialDto[];
 }
