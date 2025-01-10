@@ -1,0 +1,13 @@
+<div class="container mx-auto px-4 py-6">
+    <nz-card  class="shadow-lg">
+      <nz-tabset>
+        <nz-tab nzTitle="Course Information">
+          <app-course-info [course]="course()"></app-course-info>
+        </nz-tab>
+        <nz-tab nzTitle="Lectures">
+          <app-course-lectures [professor]="course().professor"></app-course-lectures>
+        </nz-tab>
+      
+      </nz-tabset>
+    </nz-card>
+  </div>

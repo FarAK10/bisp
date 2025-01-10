@@ -23,9 +23,9 @@ export const APP_ROUTES: AppRoute[] = [
   {
     path: ROOT_ROUTES.myCourses,
     loadChildren: ()=> import('../../pages/my-courses/routes').then(r=>r.routes),
-    title: 'Lectures',
+    title: 'My courses',
     icon: 'group',
-    roles:[],
+    roles:[Role.Professor,Role.Student],
   }
 
 ];

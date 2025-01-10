@@ -1,0 +1,41 @@
+
+@if(course(); as course){
+    <div class="space-y-6">
+        <div class="flex items-start gap-6">
+          <nz-avatar [nzSize]="64" nzIcon="book"></nz-avatar>
+          <div>
+            <h1 class="text-2xl font-bold">{{ course.title }}</h1>
+            <p class="text-gray-600">{{ course.description }}</p>
+          </div>
+        </div>
+    
+        <nz-descriptions nzBordered>
+          <nz-descriptions-item nzTitle="Professor" [nzSpan]="2">
+            <div class="flex items-center gap-2">
+              <nz-avatar nzIcon="user"></nz-avatar>
+              {{ course.professor.firstName }} {{ course.professor.lastName }}
+            </div>
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Email">
+            {{ course.professor.email }}
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Created" [nzSpan]="2">
+            {{ course.createdAt | date }}
+          </nz-descriptions-item>
+          <nz-descriptions-item nzTitle="Last Updated">
+            {{ course.updatedAt | date }}
+          </nz-descriptions-item>
+        </nz-descriptions>
+    
+        <div class="mt-4">
+          <h3 class="text-lg font-semibold mb-2">Schedule</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <nz-card *ngFor="let schedule of course.schedules" class="shadow-sm">
+              <p class="font-medium">Room {{ schedule.roomNumber }}</p>
+              <p>{{ schedule.dayOfWeek }}</p>
+              <p>{{ schedule.startTime | date:'shortTime' }} - {{ schedule.endTime | date:'shortTime' }}</p>
+            </nz-card>
+          </div>
+        </div>
+      </div>
+}

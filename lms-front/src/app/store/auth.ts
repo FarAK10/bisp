@@ -128,6 +128,7 @@ export class AuthStore extends signalStore(
       signOut() {
         authService.signOut();
         patchState(store, { user: null });
+        storage.userRole = null;
       },
       setRole
     };

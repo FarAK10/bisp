@@ -1,1 +1,17 @@
-<p>my-courses-list works!</p>
+<div class="flex flex-wrap gap-4">
+    @for(course of courses();track course.id){
+    <app-course-card
+  
+      [course]="course"
+    >
+    <div actions>
+        <button (click)="viewDetails(course)" class="mx-auto block" nz-button>
+            View Details
+            </button>
+     
+    </div>
+   
+    </app-course-card
+    >}
+  </div>
+  

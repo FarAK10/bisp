@@ -19,6 +19,7 @@ import { FormsModule } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { CourseCardComponent } from '../../../../shared/components';
+import { COURSES_ROUTES } from '../../../../core/constants/routes/courses';
 
 @Component({
   selector: 'app-course-list',
@@ -63,8 +64,11 @@ export class CourseListComponent {
     this.router.navigate(['create'], { relativeTo: this.route });
   }
   onEdit(course: GetCourseDto): void {
-    this.router.navigate([course.id], { relativeTo: this.route });
+    this.router.navigate([COURSES_ROUTES.edit,course.id], { relativeTo: this.route });
   }
+  viewDetails(course: GetCourseDto): void {
+    this.router.navigate([course.id], { relativeTo: this.route });
+  }  
   onDelete(course: GetCourseDto): void {
     this.courseClient.remove(course.id).subscribe(() => {
       this.messageService.onNotifySuccess('Course deleted successfully');

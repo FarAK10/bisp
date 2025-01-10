@@ -1,0 +1,38 @@
+<form [formGroup]="lectureForm" (ngSubmit)="submitForm()" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Title</label>
+      <input 
+        nz-input 
+        formControlName="title" 
+        class="mt-1 block w-full"
+        [class.ng-invalid]="titleControl()?.errors && titleControl()?.touched"
+      />
+      @if (titleControl()?.errors?.['required'] && titleControl()?.touched) {
+        <div class="text-red-500 text-sm mt-1">
+          Title is required
+        </div>
+      }
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Description</label>
+      <textarea 
+        nz-input 
+        formControlName="description"
+        [nzAutosize]="{ minRows: 3, maxRows: 5 }"
+        class="mt-1 block w-full"
+      ></textarea>
+    </div>
+
+    <div class="flex justify-end space-x-4 mt-6">
+      <button nz-button (click)="close.emit()">Cancel</button>
+      <button 
+        nz-button 
+        nzType="primary"
+        [disabled]="!lectureForm.valid"
+        type="submit"
+      >
+        {{ isEdit() ? 'Update' : 'Create' }} Lecture
+      </button>
+    </div>
+  </form>

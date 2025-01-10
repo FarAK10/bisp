@@ -354,7 +354,23 @@ export class UserControllerClient implements IUserControllerClient {
 export interface ICourseControllerClient {
     create(body: CreateCourseDto): Observable<void>;
     getAll(page?: number | undefined, limit?: number | undefined): Observable<CourseTableResponseDto>;
-    getCoursesByUser(): Observable<GetCourseDto[]>;
+    /**
+     * Get student's enrolled courses
+     * @param status (optional) 
+     * @param search (optional) 
+     * @param startDate (optional) 
+     * @param endDate (optional) 
+     */
+    getStudentCourses(status?: Status | undefined, search?: string | undefined, startDate?: Date | undefined, endDate?: Date | undefined): Observable<GetEnrolledCourseDto[]>;
+    /**
+     * Get professor's courses
+     * @param search (optional) 
+     * @param hasEnrollments (optional) 
+     * @param startDate (optional) 
+     * @param endDate (optional) 
+     */
+    getProfessorCourses(search?: string | undefined, hasEnrollments?: boolean | undefined, startDate?: Date | undefined, endDate?: Date | undefined): Observable<GetEnrolledCourseDto[]>;
+    getCourseDetailsWithLecturesById(id: number): Observable<CourseWithLecturesResponseDto>;
     getById(id: number): Observable<GetCourseDto>;
     update(id: number, body: UpdateCourseDto): Observable<void>;
     remove(id: number): Observable<void>;
@@ -481,8 +497,31 @@ export class CourseControllerClient implements ICourseControllerClient {
         }
     }
 
-    getCoursesByUser(): Observable<GetCourseDto[]> {
-        let url_ = this.baseUrl + "/courses/getOwnCourses";
+    /**
+     * Get student's enrolled courses
+     * @param status (optional) 
+     * @param search (optional) 
+     * @param startDate (optional) 
+     * @param endDate (optional) 
+     */
+    getStudentCourses(status?: Status | undefined, search?: string | undefined, startDate?: Date | undefined, endDate?: Date | undefined): Observable<GetEnrolledCourseDto[]> {
+        let url_ = this.baseUrl + "/courses/student-courses?";
+        if (status === null)
+            throw new Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (search === null)
+            throw new Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        if (startDate === null)
+            throw new Error("The parameter 'startDate' cannot be null.");
+        else if (startDate !== undefined)
+            url_ += "startDate=" + encodeURIComponent(startDate ? "" + startDate.toISOString() : "") + "&";
+        if (endDate === null)
+            throw new Error("The parameter 'endDate' cannot be null.");
+        else if (endDate !== undefined)
+            url_ += "endDate=" + encodeURIComponent(endDate ? "" + endDate.toISOString() : "") + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -494,20 +533,140 @@ export class CourseControllerClient implements ICourseControllerClient {
         };
 
         return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processGetCoursesByUser(response_);
+            return this.processGetStudentCourses(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processGetCoursesByUser(response_ as any);
+                    return this.processGetStudentCourses(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<GetCourseDto[]>;
+                    return _observableThrow(e) as any as Observable<GetEnrolledCourseDto[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<GetCourseDto[]>;
+                return _observableThrow(response_) as any as Observable<GetEnrolledCourseDto[]>;
         }));
     }
 
-    protected processGetCoursesByUser(response: HttpResponseBase): Observable<GetCourseDto[]> {
+    protected processGetStudentCourses(response: HttpResponseBase): Observable<GetEnrolledCourseDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetEnrolledCourseDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * Get professor's courses
+     * @param search (optional) 
+     * @param hasEnrollments (optional) 
+     * @param startDate (optional) 
+     * @param endDate (optional) 
+     */
+    getProfessorCourses(search?: string | undefined, hasEnrollments?: boolean | undefined, startDate?: Date | undefined, endDate?: Date | undefined): Observable<GetEnrolledCourseDto[]> {
+        let url_ = this.baseUrl + "/courses/professor-courses?";
+        if (search === null)
+            throw new Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        if (hasEnrollments === null)
+            throw new Error("The parameter 'hasEnrollments' cannot be null.");
+        else if (hasEnrollments !== undefined)
+            url_ += "hasEnrollments=" + encodeURIComponent("" + hasEnrollments) + "&";
+        if (startDate === null)
+            throw new Error("The parameter 'startDate' cannot be null.");
+        else if (startDate !== undefined)
+            url_ += "startDate=" + encodeURIComponent(startDate ? "" + startDate.toISOString() : "") + "&";
+        if (endDate === null)
+            throw new Error("The parameter 'endDate' cannot be null.");
+        else if (endDate !== undefined)
+            url_ += "endDate=" + encodeURIComponent(endDate ? "" + endDate.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetProfessorCourses(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetProfessorCourses(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GetEnrolledCourseDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GetEnrolledCourseDto[]>;
+        }));
+    }
+
+    protected processGetProfessorCourses(response: HttpResponseBase): Observable<GetEnrolledCourseDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetEnrolledCourseDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    getCourseDetailsWithLecturesById(id: number): Observable<CourseWithLecturesResponseDto> {
+        let url_ = this.baseUrl + "/courses/withLectures/{id}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetCourseDetailsWithLecturesById(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetCourseDetailsWithLecturesById(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<CourseWithLecturesResponseDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<CourseWithLecturesResponseDto>;
+        }));
+    }
+
+    protected processGetCourseDetailsWithLecturesById(response: HttpResponseBase): Observable<CourseWithLecturesResponseDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -517,7 +676,7 @@ export class CourseControllerClient implements ICourseControllerClient {
         {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let resultdefault: any = null;
-            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GetCourseDto[];
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CourseWithLecturesResponseDto;
             return _observableOf(resultdefault);
             }));
         }
@@ -1048,10 +1207,10 @@ export class AuthControllerClient implements IAuthControllerClient {
 }
 
 export interface ILecturesControllerClient {
-    createLecture(courseId: number, body: CreateLectureDto): Observable<void>;
-    getLecturesByCourse(courseId: number): Observable<void>;
+    createLecture(courseId: number, body: CreateLectureDto): Observable<UpdateLectureDto>;
+    getLecturesByCourse(courseId: number): Observable<LectureDto[]>;
     getLectureById(lectureId: number): Observable<void>;
-    updateLecture(lectureId: number, body: UpdateLectureDto): Observable<void>;
+    updateLecture(lectureId: number, body: UpdateLectureDto): Observable<UpdateLectureDto>;
     deleteLecture(lectureId: number): Observable<void>;
 }
 
@@ -1068,7 +1227,7 @@ export class LecturesControllerClient implements ILecturesControllerClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    createLecture(courseId: number, body: CreateLectureDto): Observable<void> {
+    createLecture(courseId: number, body: CreateLectureDto): Observable<UpdateLectureDto> {
         let url_ = this.baseUrl + "/courses/{courseId}/lectures";
         if (courseId === undefined || courseId === null)
             throw new Error("The parameter 'courseId' must be defined.");
@@ -1083,6 +1242,7 @@ export class LecturesControllerClient implements ILecturesControllerClient {
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             })
         };
 
@@ -1093,33 +1253,66 @@ export class LecturesControllerClient implements ILecturesControllerClient {
                 try {
                     return this.processCreateLecture(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<UpdateLectureDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<UpdateLectureDto>;
         }));
     }
 
-    protected processCreateLecture(response: HttpResponseBase): Observable<void> {
+    protected processCreateLecture(response: HttpResponseBase): Observable<UpdateLectureDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        if (status === 400) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
             }));
-        } else if (status !== 200 && status !== 204) {
+        } else if (status === 401) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UpdateLectureDto;
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
-    getLecturesByCourse(courseId: number): Observable<void> {
+    getLecturesByCourse(courseId: number): Observable<LectureDto[]> {
         let url_ = this.baseUrl + "/courses/{courseId}/lectures";
         if (courseId === undefined || courseId === null)
             throw new Error("The parameter 'courseId' must be defined.");
@@ -1130,6 +1323,7 @@ export class LecturesControllerClient implements ILecturesControllerClient {
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/json"
             })
         };
 
@@ -1140,30 +1334,63 @@ export class LecturesControllerClient implements ILecturesControllerClient {
                 try {
                     return this.processGetLecturesByCourse(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<LectureDto[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<LectureDto[]>;
         }));
     }
 
-    protected processGetLecturesByCourse(response: HttpResponseBase): Observable<void> {
+    protected processGetLecturesByCourse(response: HttpResponseBase): Observable<LectureDto[]> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        if (status === 400) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
             }));
-        } else if (status !== 200 && status !== 204) {
+        } else if (status === 401) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as LectureDto[];
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
     getLectureById(lectureId: number): Observable<void> {
@@ -1213,7 +1440,7 @@ export class LecturesControllerClient implements ILecturesControllerClient {
         return _observableOf(null as any);
     }
 
-    updateLecture(lectureId: number, body: UpdateLectureDto): Observable<void> {
+    updateLecture(lectureId: number, body: UpdateLectureDto): Observable<UpdateLectureDto> {
         let url_ = this.baseUrl + "/courses/{courseId}/lectures/{lectureId}";
         if (lectureId === undefined || lectureId === null)
             throw new Error("The parameter 'lectureId' must be defined.");
@@ -1228,6 +1455,7 @@ export class LecturesControllerClient implements ILecturesControllerClient {
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             })
         };
 
@@ -1238,30 +1466,63 @@ export class LecturesControllerClient implements ILecturesControllerClient {
                 try {
                     return this.processUpdateLecture(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<UpdateLectureDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<UpdateLectureDto>;
         }));
     }
 
-    protected processUpdateLecture(response: HttpResponseBase): Observable<void> {
+    protected processUpdateLecture(response: HttpResponseBase): Observable<UpdateLectureDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        if (status === 400) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
             }));
-        } else if (status !== 200 && status !== 204) {
+        } else if (status === 401) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let result401: any = null;
+            result401 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
+        } else if (status === 500) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result500: any = null;
+            result500 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ErrorResponse;
+            return throwException("Internal Server Error", status, _responseText, _headers, result500);
+            }));
+        } else {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UpdateLectureDto;
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
     deleteLecture(lectureId: number): Observable<void> {
@@ -1318,7 +1579,10 @@ export interface ILectureMaterialsControllerClient {
      */
     uploadMaterial(lectureId: number, file?: FileParameter | undefined): Observable<void>;
     getMaterialsByLecture(lectureId: number): Observable<void>;
-    downloadMaterial(materialId: number): Observable<void>;
+    /**
+     * @return File downloaded successfully
+     */
+    downloadMaterial(materialId: number): Observable<FileResponse>;
     deleteMaterial(materialId: number): Observable<void>;
 }
 
@@ -1439,7 +1703,10 @@ export class LectureMaterialsControllerClient implements ILectureMaterialsContro
         return _observableOf(null as any);
     }
 
-    downloadMaterial(materialId: number): Observable<void> {
+    /**
+     * @return File downloaded successfully
+     */
+    downloadMaterial(materialId: number): Observable<FileResponse> {
         let url_ = this.baseUrl + "/lectures/{lectureId}/materials/{materialId}/download";
         if (materialId === undefined || materialId === null)
             throw new Error("The parameter 'materialId' must be defined.");
@@ -1450,6 +1717,7 @@ export class LectureMaterialsControllerClient implements ILectureMaterialsContro
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/octet-stream"
             })
         };
 
@@ -1460,24 +1728,31 @@ export class LectureMaterialsControllerClient implements ILectureMaterialsContro
                 try {
                     return this.processDownloadMaterial(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<FileResponse>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<FileResponse>;
         }));
     }
 
-    protected processDownloadMaterial(response: HttpResponseBase): Observable<void> {
+    protected processDownloadMaterial(response: HttpResponseBase): Observable<FileResponse> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return _observableOf({ fileName: fileName, data: responseBlob as any, status: status, headers: _headers });
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2407,11 +2682,11 @@ export interface CreateUserDto {
 }
 
 export interface GetUserDto {
-    email?: string;
-    firstName?: string;
-    lastName?: string;
+    email: string;
+    firstName: string;
+    lastName: string;
     /** List of user roles */
-    roles?: string[];
+    roles: string[];
     id: number;
     createdAt: Date;
     updatedAt: Date;
@@ -2429,12 +2704,11 @@ export interface UserTableResponseDto {
 }
 
 export interface UpdateUserDto {
-    email?: string;
-    password?: string;
-    firstName?: string;
-    lastName?: string;
+    email: string;
+    firstName: string;
+    lastName: string;
     /** List of user roles */
-    roles?: string[];
+    roles: string[];
     id: number;
 
     [key: string]: any;
@@ -2469,9 +2743,9 @@ export interface ErrorResponse {
 }
 
 export interface GetBaseUserDto {
-    email?: string;
-    firstName?: string;
-    lastName?: string;
+    email: string;
+    firstName: string;
+    lastName: string;
     id: number;
 
     [key: string]: any;
@@ -2503,6 +2777,74 @@ export interface CourseTableResponseDto {
     count: number;
     page: number;
     limit: number;
+
+    [key: string]: any;
+}
+
+export interface GetEnrolledCourseDto {
+    id: number;
+    title: string;
+    description: string;
+    professor: GetBaseUserDto;
+    schedules: GetScheduleDto[];
+    enrollmentStatus?: GetEnrolledCourseDtoEnrollmentStatus;
+    finalGrade?: number;
+    createdAt: Date;
+    updatedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface GetLectureMaterialDto {
+    /** ID of the lecture material */
+    id: number;
+    /** Title of the material */
+    title: string;
+    /** Original name of the uploaded file */
+    originalName: string;
+    /** Filename on the server */
+    filename: string;
+    /** Path of the file */
+    filePath: string;
+    /** MIME type of the file */
+    mimetype: string;
+    /** Upload date of the file */
+    uploadedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface LectureDto {
+    id: number;
+    title: string;
+    description: string;
+    createdAt: Date;
+    updatedAt: Date;
+    materials: GetLectureMaterialDto[];
+
+    [key: string]: any;
+}
+
+export interface EnrollmentResponseDto {
+    studentId: number;
+    studentName: string;
+    status: EnrollmentResponseDtoStatus;
+    finalGrade: number | undefined;
+    enrollmentDate: Date;
+
+    [key: string]: any;
+}
+
+export interface CourseWithLecturesResponseDto {
+    id: number;
+    title: string;
+    description: string;
+    professor: GetUserDto;
+    schedules: GetScheduleDto[];
+    lectures: LectureDto[];
+    enrollments: EnrollmentResponseDto[];
+    createdAt: Date;
+    updatedAt: Date;
 
     [key: string]: any;
 }
@@ -2556,14 +2898,13 @@ export interface RefreshTokenDto {
 export interface CreateLectureDto {
     title: string;
     description: string;
-    schedules: CreateScheduleDto[];
 
     [key: string]: any;
 }
 
 export interface UpdateLectureDto {
-    title?: string;
-    description?: string;
+    title: string;
+    description: string;
     id: number;
 
     [key: string]: any;
@@ -2607,9 +2948,43 @@ export enum Role {
     Admin = "Admin",
 }
 
+export enum Status {
+    PENDING = "PENDING",
+    ENROLLED = "ENROLLED",
+    WAITLISTED = "WAITLISTED",
+    DROPPED = "DROPPED",
+    WITHDRAWN = "WITHDRAWN",
+    COMPLETED = "COMPLETED",
+}
+
+export enum GetEnrolledCourseDtoEnrollmentStatus {
+    PENDING = "PENDING",
+    ENROLLED = "ENROLLED",
+    WAITLISTED = "WAITLISTED",
+    DROPPED = "DROPPED",
+    WITHDRAWN = "WITHDRAWN",
+    COMPLETED = "COMPLETED",
+}
+
+export enum EnrollmentResponseDtoStatus {
+    PENDING = "PENDING",
+    ENROLLED = "ENROLLED",
+    WAITLISTED = "WAITLISTED",
+    DROPPED = "DROPPED",
+    WITHDRAWN = "WITHDRAWN",
+    COMPLETED = "COMPLETED",
+}
+
 export interface FileParameter {
     data: any;
     fileName: string;
+}
+
+export interface FileResponse {
+    data: Blob;
+    status: number;
+    fileName?: string;
+    headers?: { [name: string]: any };
 }
 
 export class ApiException extends Error {

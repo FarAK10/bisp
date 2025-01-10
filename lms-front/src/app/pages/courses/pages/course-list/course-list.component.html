@@ -7,9 +7,12 @@
 
     [course]="course"
   >
-  <div actions>
+  <div class="flex gap-2" actions>
+    <button (click)="viewDetails(course)" class="mx-auto block" nz-button>
+      View Course
+    </button>
     <button (click)="onEdit(course)" class="mx-auto block" nz-button>
-      View Details
+      Edit Course
     </button>
   </div>
  
