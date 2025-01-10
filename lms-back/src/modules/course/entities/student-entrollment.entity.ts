@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
 import { Course } from '@modules/course/entities/course.entity';
+import { EnrollmentStatus } from '@common/constants/enrollment-status.enum';
 
 @Entity('student_enrollments')
 export class StudentEnrollment {
@@ -26,8 +27,12 @@ export class StudentEnrollment {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   enrollmentDate: Date;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: EnrollmentStatus,
+    default: EnrollmentStatus.PENDING
+  })
+  status: EnrollmentStatus;
 
   @Column({ type: 'numeric', precision: 5, scale: 2, nullable: true })
   finalGrade: number;

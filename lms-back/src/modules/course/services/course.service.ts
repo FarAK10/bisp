@@ -20,6 +20,7 @@ import { ScheduleService } from '@modules/schedule/services/schedule.service';
 import { BaseScheduleDto } from '@modules/schedule/dto/get-scedule.dto';
 import { WeekEnum } from '@common/constants/week.enum';
 import * as moment from 'moment';
+import { EnrollmentStatus } from '@common/constants/enrollment-status.enum';
 @Injectable()
 export class CourseService {
   constructor(
@@ -86,7 +87,7 @@ export class CourseService {
     const [data, count] = await this.courseRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
-      relations: ['professor'],
+      relations: ['professor','schedules'],
     });
     return {
       data,
@@ -196,13 +197,31 @@ export class CourseService {
         id: courseId,
       },
     });
+    if (!course) {
+      throw new NotFoundException(`Course with id ${courseId} does not exist.`);
+    }
     const student = await this.userService.findOne(studentId);
-
+    if (!student) {
+      throw new NotFoundException(`Student with id ${studentId} does not exist.`);
+    }
+    const existingEnrollment = await this.studentEnrollmentRepository
+                                     .createQueryBuilder('enrollment')
+                                    .where('enrollment.courseId = :courseId',{courseId})
+                                    .andWhere('enrollment.student = :studentId', {studentId})
+                                    .andWhere('enrollment.status IN (:...statuses)', {
+                                       statuses: [EnrollmentStatus.ENROLLED,EnrollmentStatus.WAITLISTED]
+                                    })
+                                    .getOne();
+    if(existingEnrollment){
+      throw new ConflictException( `Student with id ${studentId} is already enrolled or waitlisted for course with id ${courseId}.`
+      )
+    }
+     
     const enrollment = this.studentEnrollmentRepository.create({
       course,
       student,
       enrollmentDate: new Date(),
-      status: 'active',
+      status: EnrollmentStatus.ENROLLED,
     });
 
     return this.studentEnrollmentRepository.save(enrollment);
@@ -216,7 +235,7 @@ export class CourseService {
     if (!enrollment) throw new NotFoundException('Enrollment not found');
 
     enrollment.finalGrade = grade;
-    enrollment.status = 'completed';
+    enrollment.status = EnrollmentStatus.COMPLETED;
 
     return this.studentEnrollmentRepository.save(enrollment);
   }
@@ -230,7 +249,8 @@ export class CourseService {
       throw new NotFoundException('Enrollment not found.');
     }
 
-    await this.studentEnrollmentRepository.remove(enrollment);
+    enrollment.status = EnrollmentStatus.DROPPED;
+    return  this.studentEnrollmentRepository.save(enrollment)
   }
 
   private async checkScheduleConflicts(schedules: BaseScheduleDto[]) {
