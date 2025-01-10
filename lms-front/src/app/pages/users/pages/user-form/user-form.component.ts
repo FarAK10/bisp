@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
   OnInit,
@@ -17,7 +18,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { createSelectItem } from '../../../../core/utils/object-transform';
 import { Role, ROOT_ROUTES } from '../../../../core/constants';
 import { ActivatedRoute, Router } from '@angular/router';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { UserRoutes } from '../../../../core/constants/routes/users';
 import { filter, map, switchMap } from 'rxjs';
 import {
@@ -47,6 +48,7 @@ export class UserFormComponent implements OnInit {
   route = inject(ActivatedRoute);
   userClient = inject(UserControllerClient);
   messageService = inject(MessageService);
+  destroyRef =inject(DestroyRef)
   router = inject(Router);
   userId = toSignal(
     this.route.params.pipe(map((params) => params[UserRoutes.userId]))
@@ -65,7 +67,7 @@ export class UserFormComponent implements OnInit {
       const passwordControl = this.createUserForm.controls.password;
       passwordControl.clearValidators();
       passwordControl.updateValueAndValidity();
-      this.selectedUser$.subscribe((user) => {
+      this.selectedUser$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => {
         this.createUserForm.patchValue(user);
       });
     }

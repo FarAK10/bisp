@@ -4,13 +4,13 @@ import {
   input,
   output,
 } from '@angular/core';
-import { GetCourseDto } from '../../../../../../core/api/lms-api';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { CommonModule } from '@angular/common';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { WeekEnum } from '../../../../../../core/constants/week';
 import { NzTagModule } from 'ng-zorro-antd/tag';
-import { EventType } from '../../../../../../core/constants/events';
+import { GetCourseDto } from '../../../core/api/lms-api';
+import { EventType } from '../../../core/constants/events';
+import { WeekEnum } from '../../../core/constants/week';
 @Component({
   selector: 'app-course-card',
   standalone: true,
@@ -22,9 +22,6 @@ import { EventType } from '../../../../../../core/constants/events';
 export class CourseCardComponent {
   course = input.required<GetCourseDto>();
   week = WeekEnum
-  onViewCourse = output<GetCourseDto>();
   EventType = EventType;
-  viewCourse() {
-    this.onViewCourse.emit(this.course());
-  }
+
 }

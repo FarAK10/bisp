@@ -44,18 +44,15 @@ export class RolesGuard implements CanActivateChild {
    * @param requiredRoles Array of roles required to access the route.
    */
   private hasRequiredRoles(requiredRoles: Role[]): Observable<boolean> {
-    const userRoles = this.authStore.userRoles(); // Assuming userRoles is a signal or observable
-    if (!requiredRoles || requiredRoles.length === 0) {
-      // No roles required, allow access
+  
+    const userRole = this.authStore.selectedRole();
+    if(!requiredRoles || requiredRoles.length===0){
       return of(true);
     }
-
-    if (userRoles && userRoles.length > 0) {
-      const hasRole = requiredRoles.some((role) => userRoles.includes(role));
-      return of(hasRole);
-    } else {
-      // User roles not loaded, deny access
-      return of(false);
-    }
+    if(requiredRoles.includes(userRole)) {
+      return of(true)
+    } 
+    return of(false)
+    
   }
 }

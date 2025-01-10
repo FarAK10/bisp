@@ -6,6 +6,13 @@
   </div>
 
   <div class="actions">
+    <nz-select [(ngModel)]="selectedRole" (ngModelChange)="onRoleSelect($any($event))" >
+      @for(role of selectableRoles;track role){
+        <nz-option [nzLabel]="role.label" [nzValue]="role.value"></nz-option>
+
+      }
+       <nz-select-item></nz-select-item>
+    </nz-select>
     <button nz-button nzType="primary" (click)="logout()">
       <span nz-icon nzType="logout" nzTheme="outline"></span>
       <span>{{ "logout" }}</span>

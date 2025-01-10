@@ -4,8 +4,15 @@
 <div class="flex flex-wrap gap-4">
   @for(course of courses();track course.id){
   <app-course-card
-    (onViewCourse)="onEdit($event)"
+
     [course]="course"
-  ></app-course-card
+  >
+  <div actions>
+    <button (click)="onEdit(course)" class="mx-auto block" nz-button>
+      View Details
+    </button>
+  </div>
+ 
+  </app-course-card
   >}
 </div>

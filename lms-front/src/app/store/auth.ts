@@ -27,17 +27,20 @@ import {
 } from '../core/api/lms-api';
 import { StorageService } from '../core/services/storage.service';
 import { AuthService } from '../core/services/auth.service';
+import { Role, STORAGE_KEY } from '../core/constants';
 
 interface AuthState {
   user: GetUserDto | null;
   isLoading: boolean;
   error: string | null;
+  selectedRole:Role,
 }
 
 const initialState: AuthState = {
   user: null,
   isLoading: false,
   error: null,
+  selectedRole:localStorage.getItem(localStorage.getItem(STORAGE_KEY.user_role)) as Role || null,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -66,7 +69,10 @@ export class AuthStore extends signalStore(
       return userClient.getUserProfile().pipe(
         tap({
           next: (user: GetUserDto) => {
-            patchState(store, { user, error: null });
+            patchState(store, { user, error: null, });
+            if(!storage.userRole){
+               patchState(store,{selectedRole: user.roles[0] as Role})
+            }
           },
           finalize: () => {
             patchState(store, { isLoading: false });
@@ -106,6 +112,10 @@ export class AuthStore extends signalStore(
         })
       );
     };
+    const setRole = (role:Role) => {
+       patchState(store,{selectedRole:role})
+       storage.userRole = role;
+    }
 
     return {
       loadUser,
@@ -117,6 +127,7 @@ export class AuthStore extends signalStore(
         authService.signOut();
         patchState(store, { user: null });
       },
+      setRole
     };
   }),
   withHooks({

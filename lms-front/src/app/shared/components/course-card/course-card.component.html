@@ -10,7 +10,7 @@
         {{ course.description }}
       </p>
 
-\      <div class="mt-4">
+      <div class="mt-4">
         @for(schedule of course.schedules; track schedule.id) {
           <div class="mb-2 p-2 bg-gray-50 rounded-md">
             <div class="flex justify-between items-center">
@@ -28,7 +28,6 @@
           </div>
         }
       </div>
-
       <div class="mt-4 flex items-center space-x-4">
         <div 
           class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xl"
@@ -44,9 +43,7 @@
       </div>
     </div>
     <div>
-      <button (click)="viewCourse()" class="mx-auto block" nz-button>
-        View Details
-      </button>
+      <ng-content select='[actions]'></ng-content>
     </div>
   </nz-card>
 }

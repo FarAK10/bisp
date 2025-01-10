@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { STORAGE_KEY } from '../constants';
+import { Role, STORAGE_KEY } from '../constants';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +11,14 @@ export class StorageService {
 
   set accessToken(accessToken: string) {
     localStorage.setItem(STORAGE_KEY.access_token, accessToken);
+  }
+
+  get userRole():Role {
+    return localStorage.getItem(STORAGE_KEY.user_role) as Role
+  }
+
+  set userRole(role:Role) {
+     localStorage.setItem(STORAGE_KEY.user_role, role)
   }
 
   get refreshToken(): string {

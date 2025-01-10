@@ -1,20 +1,6 @@
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  DestroyRef,
-  Directive,
-  ElementRef,
-  inject,
-  Injector,
-  input,
-  TemplateRef,
-  ViewContainerRef,
-} from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { Role } from '../../core/constants';
-import { doesUserHasPermission } from '../../core/utils/permission';
-import { AuthStore } from '../../store/auth';
+import { Directive, AfterViewInit, input, inject, Injector, ViewContainerRef, TemplateRef, ElementRef, DestroyRef, ChangeDetectorRef, effect } from "@angular/core";
+import { Role } from "../../core/constants";
+import { AuthStore } from "../../store/auth";
 
 @Directive({
   selector: '[permission]',
@@ -24,6 +10,8 @@ export class PermissionDirective implements AfterViewInit {
   roles = input<Role[]>([], { alias: 'permission' });
   authStrore = inject(AuthStore);
   user = this.authStrore.user;
+  selectedRole = this.authStrore.selectedRole;
+  injector = inject(Injector);
 
   constructor(
     private viewContainer: ViewContainerRef,
@@ -33,15 +21,20 @@ export class PermissionDirective implements AfterViewInit {
   ) {}
 
   ngAfterViewInit(): void {
-    this.checkPermissions();
+    effect(() => {
+      const role = this.selectedRole();
+      this.checkPermissions(role);
+    }, { injector: this.injector });
   }
 
-  private checkPermissions(): void {
-    const user = this.user();
-    if (doesUserHasPermission(user.roles as Role[], this.roles())) {
+  private checkPermissions(role: Role): void {
+    const isRoleIncluded = this.roles().includes(role);
+
+    this.viewContainer.clear();
+
+    if (isRoleIncluded) {
       this.viewContainer.createEmbeddedView(this.templateRef);
-    } else {
-      this.viewContainer.clear();
+      this.cdr.markForCheck(); 
     }
   }
 }
