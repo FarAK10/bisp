@@ -1810,10 +1810,10 @@ export class LectureMaterialsControllerClient implements ILectureMaterialsContro
 }
 
 export interface IAssignmentsControllerClient {
-    createAssignment(courseId: number, body: CreateAssignmentDto): Observable<void>;
-    getAssignmentsByCourse(courseId: number): Observable<void>;
-    getAssignmentById(assignmentId: number): Observable<void>;
-    updateAssignment(assignmentId: number, body: UpdateAssignmentDto): Observable<void>;
+    createAssignment(courseId: number, body: CreateAssignmentDto): Observable<UpdateAssignmentDto>;
+    getAssignmentsByCourse(courseId: number): Observable<AssignmentResponseDto[]>;
+    getAssignmentById(assignmentId: number): Observable<AssignmentResponseDto>;
+    updateAssignment(assignmentId: number, body: UpdateAssignmentDto): Observable<UpdateAssignmentDto>;
     deleteAssignment(assignmentId: number): Observable<void>;
 }
 
@@ -1830,7 +1830,7 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
         this.baseUrl = baseUrl ?? "";
     }
 
-    createAssignment(courseId: number, body: CreateAssignmentDto): Observable<void> {
+    createAssignment(courseId: number, body: CreateAssignmentDto): Observable<UpdateAssignmentDto> {
         let url_ = this.baseUrl + "/courses/{courseId}/assignments";
         if (courseId === undefined || courseId === null)
             throw new Error("The parameter 'courseId' must be defined.");
@@ -1845,6 +1845,7 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             })
         };
 
@@ -1855,33 +1856,30 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
                 try {
                     return this.processCreateAssignment(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<UpdateAssignmentDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<UpdateAssignmentDto>;
         }));
     }
 
-    protected processCreateAssignment(response: HttpResponseBase): Observable<void> {
+    protected processCreateAssignment(response: HttpResponseBase): Observable<UpdateAssignmentDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 201) {
+        {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UpdateAssignmentDto;
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
-    getAssignmentsByCourse(courseId: number): Observable<void> {
+    getAssignmentsByCourse(courseId: number): Observable<AssignmentResponseDto[]> {
         let url_ = this.baseUrl + "/courses/{courseId}/assignments";
         if (courseId === undefined || courseId === null)
             throw new Error("The parameter 'courseId' must be defined.");
@@ -1892,6 +1890,7 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/json"
             })
         };
 
@@ -1902,33 +1901,30 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
                 try {
                     return this.processGetAssignmentsByCourse(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<AssignmentResponseDto[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<AssignmentResponseDto[]>;
         }));
     }
 
-    protected processGetAssignmentsByCourse(response: HttpResponseBase): Observable<void> {
+    protected processGetAssignmentsByCourse(response: HttpResponseBase): Observable<AssignmentResponseDto[]> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AssignmentResponseDto[];
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
-    getAssignmentById(assignmentId: number): Observable<void> {
+    getAssignmentById(assignmentId: number): Observable<AssignmentResponseDto> {
         let url_ = this.baseUrl + "/courses/{courseId}/assignments/{assignmentId}";
         if (assignmentId === undefined || assignmentId === null)
             throw new Error("The parameter 'assignmentId' must be defined.");
@@ -1939,6 +1935,7 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/json"
             })
         };
 
@@ -1949,33 +1946,30 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
                 try {
                     return this.processGetAssignmentById(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<AssignmentResponseDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<AssignmentResponseDto>;
         }));
     }
 
-    protected processGetAssignmentById(response: HttpResponseBase): Observable<void> {
+    protected processGetAssignmentById(response: HttpResponseBase): Observable<AssignmentResponseDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AssignmentResponseDto;
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
-    updateAssignment(assignmentId: number, body: UpdateAssignmentDto): Observable<void> {
+    updateAssignment(assignmentId: number, body: UpdateAssignmentDto): Observable<UpdateAssignmentDto> {
         let url_ = this.baseUrl + "/courses/{courseId}/assignments/{assignmentId}";
         if (assignmentId === undefined || assignmentId === null)
             throw new Error("The parameter 'assignmentId' must be defined.");
@@ -1990,6 +1984,7 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
             responseType: "blob",
             headers: new HttpHeaders({
                 "Content-Type": "application/json",
+                "Accept": "application/json"
             })
         };
 
@@ -2000,30 +1995,27 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
                 try {
                     return this.processUpdateAssignment(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<UpdateAssignmentDto>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<UpdateAssignmentDto>;
         }));
     }
 
-    protected processUpdateAssignment(response: HttpResponseBase): Observable<void> {
+    protected processUpdateAssignment(response: HttpResponseBase): Observable<UpdateAssignmentDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
+        {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as UpdateAssignmentDto;
+            return _observableOf(resultdefault);
             }));
         }
-        return _observableOf(null as any);
     }
 
     deleteAssignment(assignmentId: number): Observable<void> {
@@ -2075,11 +2067,22 @@ export class AssignmentsControllerClient implements IAssignmentsControllerClient
 }
 
 export interface ISubmissionsControllerClient {
-    submitAssignment(assignmentId: number): Observable<void>;
-    getSubmissionsForAssignment(assignmentId: number): Observable<void>;
+    /**
+     * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
+     */
+    submitAssignment(assignmentId: number, file?: FileParameter | undefined): Observable<void>;
+    getSubmissionsForAssignment(assignmentId: number): Observable<SubmissionResponseDto[]>;
+    /**
+     * Get student submission for an assignment
+     * @return Returns the student submission for the assignment
+     */
+    getStudentSubmissionByAssignment(studentId: number, assignmentId: number): Observable<SubmissionResponseDto>;
     getSubmissionById(submissionId: number): Observable<void>;
-    downloadSubmission(submissionId: number): Observable<void>;
-    gradeSubmission(submissionId: number): Observable<void>;
+    /**
+     * @return File downloaded successfully
+     */
+    downloadSubmissionFile(fileId: number): Observable<FileResponse>;
+    gradeSubmission(submissionId: number, body: GradeSubmissionDto): Observable<void>;
 }
 
 @Injectable({
@@ -2095,14 +2098,24 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
         this.baseUrl = baseUrl ?? "";
     }
 
-    submitAssignment(assignmentId: number): Observable<void> {
+    /**
+     * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
+     */
+    submitAssignment(assignmentId: number, file?: FileParameter | undefined): Observable<void> {
         let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/submit";
         if (assignmentId === undefined || assignmentId === null)
             throw new Error("The parameter 'assignmentId' must be defined.");
         url_ = url_.replace("{assignmentId}", encodeURIComponent("" + assignmentId));
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = new FormData();
+        if (file === null || file === undefined)
+            throw new Error("The parameter 'file' cannot be null.");
+        else
+            content_.append("file", file.data, file.fileName ? file.fileName : "file");
+
         let options_ : any = {
+            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
@@ -2142,7 +2155,7 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
         return _observableOf(null as any);
     }
 
-    getSubmissionsForAssignment(assignmentId: number): Observable<void> {
+    getSubmissionsForAssignment(assignmentId: number): Observable<SubmissionResponseDto[]> {
         let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions";
         if (assignmentId === undefined || assignmentId === null)
             throw new Error("The parameter 'assignmentId' must be defined.");
@@ -2153,6 +2166,7 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/json"
             })
         };
 
@@ -2163,14 +2177,66 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
                 try {
                     return this.processGetSubmissionsForAssignment(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<SubmissionResponseDto[]>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<SubmissionResponseDto[]>;
         }));
     }
 
-    protected processGetSubmissionsForAssignment(response: HttpResponseBase): Observable<void> {
+    protected processGetSubmissionsForAssignment(response: HttpResponseBase): Observable<SubmissionResponseDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SubmissionResponseDto[];
+            return _observableOf(resultdefault);
+            }));
+        }
+    }
+
+    /**
+     * Get student submission for an assignment
+     * @return Returns the student submission for the assignment
+     */
+    getStudentSubmissionByAssignment(studentId: number, assignmentId: number): Observable<SubmissionResponseDto> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/student/{studentId}";
+        if (studentId === undefined || studentId === null)
+            throw new Error("The parameter 'studentId' must be defined.");
+        url_ = url_.replace("{studentId}", encodeURIComponent("" + studentId));
+        if (assignmentId === undefined || assignmentId === null)
+            throw new Error("The parameter 'assignmentId' must be defined.");
+        url_ = url_.replace("{assignmentId}", encodeURIComponent("" + assignmentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGetStudentSubmissionByAssignment(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGetStudentSubmissionByAssignment(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<SubmissionResponseDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<SubmissionResponseDto>;
+        }));
+    }
+
+    protected processGetStudentSubmissionByAssignment(response: HttpResponseBase): Observable<SubmissionResponseDto> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -2179,7 +2245,17 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 200) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SubmissionResponseDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Forbidden - Not authorized to view this submission", status, _responseText, _headers);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Assignment not found", status, _responseText, _headers);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -2236,45 +2312,56 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
         return _observableOf(null as any);
     }
 
-    downloadSubmission(submissionId: number): Observable<void> {
-        let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/{submissionId}/download";
-        if (submissionId === undefined || submissionId === null)
-            throw new Error("The parameter 'submissionId' must be defined.");
-        url_ = url_.replace("{submissionId}", encodeURIComponent("" + submissionId));
+    /**
+     * @return File downloaded successfully
+     */
+    downloadSubmissionFile(fileId: number): Observable<FileResponse> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/files/{fileId}";
+        if (fileId === undefined || fileId === null)
+            throw new Error("The parameter 'fileId' must be defined.");
+        url_ = url_.replace("{fileId}", encodeURIComponent("" + fileId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Accept": "application/octet-stream"
             })
         };
 
         return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processDownloadSubmission(response_);
+            return this.processDownloadSubmissionFile(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processDownloadSubmission(response_ as any);
+                    return this.processDownloadSubmissionFile(response_ as any);
                 } catch (e) {
-                    return _observableThrow(e) as any as Observable<void>;
+                    return _observableThrow(e) as any as Observable<FileResponse>;
                 }
             } else
-                return _observableThrow(response_) as any as Observable<void>;
+                return _observableThrow(response_) as any as Observable<FileResponse>;
         }));
     }
 
-    protected processDownloadSubmission(response: HttpResponseBase): Observable<void> {
+    protected processDownloadSubmissionFile(response: HttpResponseBase): Observable<FileResponse> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
             (response as any).error instanceof Blob ? (response as any).error : undefined;
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return _observableOf(null as any);
-            }));
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return _observableOf({ fileName: fileName, data: responseBlob as any, status: status, headers: _headers });
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2283,17 +2370,21 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
         return _observableOf(null as any);
     }
 
-    gradeSubmission(submissionId: number): Observable<void> {
+    gradeSubmission(submissionId: number, body: GradeSubmissionDto): Observable<void> {
         let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/{submissionId}/grade";
         if (submissionId === undefined || submissionId === null)
             throw new Error("The parameter 'submissionId' must be defined.");
         url_ = url_.replace("{submissionId}", encodeURIComponent("" + submissionId));
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(body);
+
         let options_ : any = {
+            body: content_,
             observe: "response",
             responseType: "blob",
             headers: new HttpHeaders({
+                "Content-Type": "application/json",
             })
         };
 
@@ -2319,6 +2410,194 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
 
         let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
         if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+export interface IAssignmentFilesControllerClient {
+    /**
+     * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
+     */
+    uploadAssignmentFile(assignmentId: number, file?: FileParameter | undefined): Observable<void>;
+    /**
+     * @return File downloaded successfully
+     */
+    downloadAssignmentFile(fileId: number): Observable<FileResponse>;
+    deleteFileById(fileId: number): Observable<void>;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+export class AssignmentFilesControllerClient implements IAssignmentFilesControllerClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
+     */
+    uploadAssignmentFile(assignmentId: number, file?: FileParameter | undefined): Observable<void> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/files/upload";
+        if (assignmentId === undefined || assignmentId === null)
+            throw new Error("The parameter 'assignmentId' must be defined.");
+        url_ = url_.replace("{assignmentId}", encodeURIComponent("" + assignmentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = new FormData();
+        if (file === null || file === undefined)
+            throw new Error("The parameter 'file' cannot be null.");
+        else
+            content_.append("file", file.data, file.fileName ? file.fileName : "file");
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processUploadAssignmentFile(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processUploadAssignmentFile(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processUploadAssignmentFile(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return File downloaded successfully
+     */
+    downloadAssignmentFile(fileId: number): Observable<FileResponse> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/files/{fileId}/download";
+        if (fileId === undefined || fileId === null)
+            throw new Error("The parameter 'fileId' must be defined.");
+        url_ = url_.replace("{fileId}", encodeURIComponent("" + fileId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/octet-stream"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDownloadAssignmentFile(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDownloadAssignmentFile(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<FileResponse>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<FileResponse>;
+        }));
+    }
+
+    protected processDownloadAssignmentFile(response: HttpResponseBase): Observable<FileResponse> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200 || status === 206) {
+            const contentDisposition = response.headers ? response.headers.get("content-disposition") : undefined;
+            let fileNameMatch = contentDisposition ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition) : undefined;
+            let fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[3] || fileNameMatch[2] : undefined;
+            if (fileName) {
+                fileName = decodeURIComponent(fileName);
+            } else {
+                fileNameMatch = contentDisposition ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition) : undefined;
+                fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+            }
+            return _observableOf({ fileName: fileName, data: responseBlob as any, status: status, headers: _headers });
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    deleteFileById(fileId: number): Observable<void> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/files/{fileId}";
+        if (fileId === undefined || fileId === null)
+            throw new Error("The parameter 'fileId' must be defined.");
+        url_ = url_.replace("{fileId}", encodeURIComponent("" + fileId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDeleteFileById(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDeleteFileById(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processDeleteFileById(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return _observableOf(null as any);
             }));
@@ -2911,14 +3190,93 @@ export interface UpdateLectureDto {
 }
 
 export interface CreateAssignmentDto {
+    /** Title of the assignment */
     title: string;
-    description: string;
-    dueDate: string;
+    /** Detailed description of the assignment */
+    description?: string;
+    /** Due date for the assignment */
+    dueDate: Date;
 
     [key: string]: any;
 }
 
 export interface UpdateAssignmentDto {
+    /** Title of the assignment */
+    title?: string;
+    /** Detailed description of the assignment */
+    description?: string;
+    /** Due date for the assignment */
+    dueDate?: Date;
+
+    [key: string]: any;
+}
+
+export interface AssignmentFileResponseDto {
+    /** The unique identifier of the file */
+    id: number;
+    /** Original name of the uploaded file */
+    originalFileName: string;
+    /** Type of the file */
+    fileType: string;
+    /** When the file was uploaded */
+    uploadedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface AssignmentResponseDto {
+    /** The unique identifier of the assignment */
+    id: number;
+    /** Title of the assignment */
+    title: string;
+    /** Detailed description of the assignment */
+    description?: string;
+    /** Due date for the assignment */
+    dueDate: Date;
+    /** Files attached to this assignment */
+    files: AssignmentFileResponseDto[];
+    /** When the assignment was created */
+    createdAt: Date;
+    /** When the assignment was last updated */
+    updatedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface SubmissionFileResponseDto {
+    /** The unique identifier of the submission file */
+    id: number;
+    /** Original name of the uploaded file */
+    originalFileName: string;
+    /** Timestamp when the file was uploaded */
+    uploadedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface SubmissionResponseDto {
+    /** The unique identifier of the submission */
+    id: number;
+    /** Array of files included in this submission */
+    files: SubmissionFileResponseDto[];
+    submittedStudent: GetUserDto;
+    /** Grade assigned to the submission */
+    grade?: number | undefined;
+    /** Feedback from the professor */
+    feedback?: string | undefined;
+    /** Timestamp when the submission was created */
+    submittedAt: Date;
+    /** Timestamp when the submission was last updated */
+    updatedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface GradeSubmissionDto {
+    /** Grade to assign to the submission (0-100) */
+    grade: number;
+    /** Feedback for the student */
+    feedback?: string;
 
     [key: string]: any;
 }

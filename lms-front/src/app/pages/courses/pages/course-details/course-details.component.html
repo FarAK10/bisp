@@ -7,7 +7,9 @@
         <nz-tab nzTitle="Lectures">
           <app-course-lectures [professor]="course().professor"></app-course-lectures>
         </nz-tab>
-      
+        <nz-tab nzTitle="Assignments">
+          <app-assignments [professor]="course().professor"></app-assignments>
+        </nz-tab>
       </nz-tabset>
     </nz-card>
   </div>

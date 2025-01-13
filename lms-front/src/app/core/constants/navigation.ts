@@ -26,6 +26,13 @@ export const APP_ROUTES: AppRoute[] = [
     title: 'My courses',
     icon: 'group',
     roles:[Role.Professor,Role.Student],
+  },
+  {
+    path: ROOT_ROUTES.assignments,
+    loadChildren: ()=> import('../../pages/assigmnents/routes').then(r=>r.routes),
+    title: 'Assignments',
+    icon: 'group',
+    roles:[Role.Admin,Role.Professor,Role.Student],
   }
 
 ];
