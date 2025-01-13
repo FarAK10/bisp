@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -17,15 +17,16 @@ import { ROOT_ROUTES } from '../../../../core/constants';
     NzTableModule,
     NzButtonModule,NzTagModule],
   templateUrl: './submission-list.component.html',
-  styleUrl: './submission-list.component.less'
+  styleUrl: './submission-list.component.less',
+  changeDetection:ChangeDetectionStrategy.OnPush,
 })
-export class SubmissionListComponent {
+export class SubmissionListComponent implements OnInit {
   private submissionClient = inject(SubmissionsControllerClient);
   private router = inject(Router);
   private route = inject(ActivatedRoute)
   private destroyRef = inject(DestroyRef)
   private messageService = inject(MessageService)
-  assignmentId = signal<number>(+this.route.snapshot[ASSIGNMETS_PAGES.assignmnetId])
+  assignmentId = signal<number>(+this.route.snapshot.params[ASSIGNMETS_PAGES.assignmnetId])
   submissions = signal<SubmissionResponseDto[]>([])
   loadSubmissions() {
     this.submissionClient.getSubmissionsForAssignment(this.assignmentId())
@@ -35,7 +36,9 @@ export class SubmissionListComponent {
         error: () => this.messageService.onNotifyError('Failed to load submissions')
       });
   }
-
+ ngOnInit(): void {
+   this.loadSubmissions();
+ }
   getStatus(submission: SubmissionResponseDto): string {
     if (submission.grade !== null) return 'Graded';
     return 'Pending Review';
@@ -46,6 +49,6 @@ export class SubmissionListComponent {
     return 'orange';
   }
   viewSubmission(submissionId: number) {
-    this.router.navigate([ROOT_ROUTES.submissions, submissionId]);
+    this.router.navigate([submissionId],{relativeTo:this.route});
   }
 }

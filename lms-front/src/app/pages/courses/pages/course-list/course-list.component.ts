@@ -20,6 +20,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { CourseCardComponent } from '../../../../shared/components';
 import { COURSES_ROUTES } from '../../../../core/constants/routes/courses';
+import { Role } from '../../../../core/constants';
 
 @Component({
   selector: 'app-course-list',
@@ -50,6 +51,7 @@ export class CourseListComponent {
   ]).pipe(
     switchMap(([page, pageSize]) => this.courseClient.getAll(page, pageSize))
   );
+  role = Role
   tableRes = toSignal(this.tableRes$);
   courses = computed(() => this.tableRes()?.data);
 
@@ -74,5 +76,16 @@ export class CourseListComponent {
       this.messageService.onNotifySuccess('Course deleted successfully');
       this.updateTable$.next(true);
     });
+  }
+  enroll(course:GetCourseDto):void {
+  this.courseClient.enroll(course.id).subscribe({
+    next:()=> {
+      this.messageService.onNotifySuccess('Course deleted successfully');
+    },
+    error:(err)=> {
+      console.log(err)
+      this.messageService.onNotifyError(err.message)
+    }
+  })
   }
 }

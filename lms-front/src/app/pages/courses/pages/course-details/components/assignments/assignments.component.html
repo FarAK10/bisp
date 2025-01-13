@@ -26,7 +26,7 @@
               </nz-tag>
             </div>
 
-             <div class="flex">
+             <div class="flex" *permission="[role.Student]">
                 <button nz-button (click)="goToAssignmnetDetails(assignment)">Submit An assignment</button>
              </div>
             

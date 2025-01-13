@@ -5,7 +5,7 @@ import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCollapseModule } from 'ng-zorro-antd/collapse';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { AssignmentFileResponseDto, AssignmentFilesControllerClient, AssignmentResponseDto, AssignmentsControllerClient, FileParameter, GetUserDto, LectureDto, LectureMaterialsControllerClient, LecturesControllerClient, Role } from '../../../../../../core/api/lms-api';
+import { AssignmentFileResponseDto, AssignmentFilesControllerClient, AssignmentResponseDto, AssignmentsControllerClient, FileParameter, GetUserDto, LectureDto, LectureMaterialsControllerClient, LecturesControllerClient } from '../../../../../../core/api/lms-api';
 import { COURSES_ROUTES } from '../../../../../../core/constants/routes/courses';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { FileService } from '../../../../../../core/services/file.service';
@@ -17,7 +17,7 @@ import { NzUploadChangeParam, NzUploadFile, NzUploadModule } from 'ng-zorro-antd
 import { take } from 'rxjs';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
-import { ROOT_ROUTES } from '../../../../../../core/constants';
+import { Role, ROOT_ROUTES } from '../../../../../../core/constants';
 import { PermissionDirective } from '../../../../../../shared/directives/role.directive';
 import { SUBMISSION_PAGES } from '../../../../../../core/constants/routes/submission';
 
@@ -51,6 +51,7 @@ route = inject(ActivatedRoute)
   uploadHeaders = {
     Authorization: `Bearer ${localStorage.getItem('token')}`
   };
+  role =Role
   loadAssignments() {
     this.assignmentsClient.getAssignmentsByCourse(this.courseId()).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(assignments=>{
        this.assignments.set(assignments)

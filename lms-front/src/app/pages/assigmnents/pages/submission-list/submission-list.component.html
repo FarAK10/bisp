@@ -12,7 +12,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (submission of submissionsTable.data; track submission.id) {
+        @for (submission of submissions(); track submission.id) {
           <tr>
             <td>{{ submission.submittedStudent.email }}</td>
             <td>{{ submission.submittedAt | date:'medium' }}</td>

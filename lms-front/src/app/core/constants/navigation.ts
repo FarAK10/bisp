@@ -18,7 +18,7 @@ export const APP_ROUTES: AppRoute[] = [
       import('../../pages/courses/routes').then((m) => m.routes),
     title: 'Courses',
     icon: 'book',
-    roles: [Role.Admin, Role.Professor],
+    roles: [Role.Admin, Role.Professor,Role.Student],
   },
   {
     path: ROOT_ROUTES.myCourses,

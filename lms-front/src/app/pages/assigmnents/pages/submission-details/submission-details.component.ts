@@ -5,12 +5,12 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
-import { NzUploadModule } from 'ng-zorro-antd/upload';
+import { NzUploadChangeParam, NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap, take, tap } from 'rxjs';
-import { AssignmentsControllerClient, FileParameter, GradeSubmissionDto, SubmissionFileResponseDto, SubmissionResponseDto, SubmissionsControllerClient } from '../../../../core/api/lms-api';
+import { AssignmentFileResponseDto, AssignmentFilesControllerClient, AssignmentsControllerClient, FileParameter, GradeSubmissionDto, SubmissionFileResponseDto, SubmissionResponseDto, SubmissionsControllerClient } from '../../../../core/api/lms-api';
 import { SUBMISSION_PAGES } from '../../../../core/constants/routes/submission';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { AuthStore } from '../../../../store/auth';
@@ -44,6 +44,8 @@ export class SubmissionDetailsComponent {
   private destroyRef = inject(DestroyRef);
   private authStore = inject(AuthStore);
   private fileService = inject(FileService)
+  private assignmentFileClient = inject(AssignmentFilesControllerClient)
+
   user = this.authStore.user
   
   submission = signal<SubmissionResponseDto | null>(null);
@@ -71,7 +73,11 @@ export class SubmissionDetailsComponent {
   }
 
   ngOnInit() {
-    
+    this.loadData()
+  }
+
+  loadData():void {
+
     if (this.isStudentSubmission()) {
       this.loadStudentSubmissionAndDetails();
     } else {
@@ -92,6 +98,19 @@ export class SubmissionDetailsComponent {
   }
   isStudentSubmission(): boolean {
     return  !this.studentId();
+  }
+  downloadAssignmentFile(file:AssignmentFileResponseDto):void {
+     this.assignmentFileClient.downloadAssignmentFile(file.id).subscribe(
+       {
+        next: (res)=> {
+             this.fileService.downloadFile(res.data,file.originalFileName)
+        },
+        error: (err)=> {
+           this.message.error(err.message)
+        }
+       }
+     )
+
   }
 
   loadSubmission(studentId: number, assignmentId:  number) {
@@ -133,16 +152,16 @@ export class SubmissionDetailsComponent {
   }
 
   customUploadRequest = (item: any) => {
-    const assignmentId = this.route.snapshot.params['assignmentId'];
     const fileParam: FileParameter = {
       data: item.file,
       fileName: item.file.name
     };
     
-    return this.submissionClient.submitAssignment(assignmentId, fileParam)
+    return this.submissionClient.submitAssignment(this.assignmentId(), fileParam)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.loadData();
           item.onSuccess();
           this.message.success('File uploaded successfully');
         },
@@ -175,13 +194,9 @@ export class SubmissionDetailsComponent {
     
     return true;
   };
-
-  handleUploadChange(info: any) {
-    if (info.file.status === 'done') {
-      this.loadSubmission(
-        this.route.snapshot.params['studentId'],
-         this.assignmentId(),
-      );
+  handleUploadChange(event: NzUploadChangeParam): void {
+    if (event.type === 'error') {
+      this.message.error('Failed to upload file');
     }
   }
 
