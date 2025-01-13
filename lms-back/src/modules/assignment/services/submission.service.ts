@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
 import { Assignment } from '../entities/assignment.entity';
 import { Submission } from '../entities/submissionn.entity';
@@ -24,30 +24,49 @@ export class SubmissionsService {
     @InjectRepository(StudentEnrollment)
     private studentEnrollmentRepository: Repository<StudentEnrollment>,
     @InjectRepository(SubmissionFile)
-    private submissionFileRepository: Repository<SubmissionFile>
+    private submissionFileRepository: Repository<SubmissionFile>,
+    private dataSource:DataSource,
   ) {}
 
-  // Submit an assignment
   async submitAssignment(
     studentId: number,
     assignmentId: number,
-    files: Express.Multer.File[],
+    file: Express.Multer.File
   ) {
-    const submission = this.submissionsRepository.create({
-      student: { id: studentId },
-      assignment: { id: assignmentId },
-    });
-
-    const submissionFiles = files.map(file => 
-      this.submissionFileRepository.create({
-        submission,
+    await this.dataSource.transaction(async (manager) => {
+      let submission = await manager.findOne(Submission, {
+        where: {
+          student: { id: studentId },
+          assignment: { id: assignmentId }
+        },
+        relations: ['files']
+      });
+  
+      if (!submission) {
+        submission = manager.create(Submission, {
+          student: { id: studentId },
+          assignment: { id: assignmentId },
+        });
+        submission = await manager.save(Submission, submission);
+      }
+  
+      const submissionFile = manager.create(SubmissionFile, {
+        submission: submission,
         filePath: file.path,
         originalFileName: file.originalname,
-      })
-    );
-
-    submission.files = submissionFiles;
-    return await this.submissionsRepository.save(submission);
+        fileType: file.mimetype,
+      });
+  
+      await manager.save(SubmissionFile, submissionFile);
+  
+      
+  
+      return await manager.findOne(Submission, {
+        where: { id: submission.id },
+        relations: ['files', 'student']
+      });
+    });
+  
   }
 
   async getSubmissionFile(
@@ -107,6 +126,7 @@ export class SubmissionsService {
 
       ],
     });
+  
 
     // Return null if no submission found (this is not an error case)
     return submission;

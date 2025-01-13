@@ -21,17 +21,12 @@ export class Submission {
 
   @ManyToOne(() => User, (user) => user.submissions)
   student: User;
+
   @OneToMany(() => SubmissionFile, (file) => file.submission, {
     cascade: true,
     eager: true,
   })
   files: SubmissionFile[];
-
-  @Column()
-  filePath: string;
-
-  @Column()
-  originalFileName: string;
 
   @Column({ nullable: true })
   grade: number;

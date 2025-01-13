@@ -21,7 +21,6 @@ export class StudentEnrollment {
   student: User;
 
   @ManyToOne(() => Course, (course) => course.enrollments)
-  @JoinColumn({ name: 'course_id' })
   course: Course;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

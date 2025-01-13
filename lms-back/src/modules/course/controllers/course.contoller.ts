@@ -19,6 +19,7 @@ import { UpdateCourseDto } from '../dto/update-course.dto';
 import { GetCourseDto } from '../dto/get-course.dto';
 import { CourseService } from '../services/course.service';
 import {
+  ApiConflictResponse,
   ApiInternalServerErrorResponse,
   ApiOperation,
   ApiProperty,
@@ -33,6 +34,7 @@ import { ProfessorCoursesFilterDto } from '../dto/professor-course-fitler.dto';
 import { StudentCoursesFilterDto } from '../dto/student-course-filter.dto';
 import { GetEnrolledCourseDto } from '../dto/get-enrolled-course.dto';
 import { CourseWithLecturesResponseDto } from '../dto/course-with-lectures.dto';
+import { ApiErroResponses } from '@common/decorators/common-issue-response';
 @ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
 @ApiTags('courses') // Adds a "users" tag in Swagger
 @Controller('courses')
@@ -115,13 +117,15 @@ export class CourseController {
   async remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.courseService.remove(id, req.user);
   }
-
+  @ApiErroResponses()
+  @ApiConflictResponse({type:ErrorResponse})
   @Post(':id/enroll')
+
   @Roles(Role.Student)
   async enroll(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.courseService.enrollStudent(id, req.user.id);
   }
-
+  @ApiErroResponses()
   @Post(':id/unenroll')
   @Roles(Role.Student)
   async unenroll(@Param('id', ParseIntPipe) id: number, @Request() req) {

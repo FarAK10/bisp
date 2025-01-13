@@ -17,9 +17,11 @@ import { Submission } from './submissionn.entity';
   
     @Column()
     filePath: string;
-  m
     @Column()
     originalFileName: string;
+
+    @Column()
+    fileType:string;
   
     @CreateDateColumn()
     uploadedAt: Date;
