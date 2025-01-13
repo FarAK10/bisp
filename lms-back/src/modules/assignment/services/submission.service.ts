@@ -12,6 +12,7 @@ import { Submission } from '../entities/submissionn.entity';
 import { AssignmentsService } from './assignment.service';
 import { UserService } from '@modules/user/services/user.service';
 import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
+import { SubmissionFile } from '../entities/submission-file.entity';
 
 @Injectable()
 export class SubmissionsService {
@@ -22,67 +23,95 @@ export class SubmissionsService {
     private userService: UserService,
     @InjectRepository(StudentEnrollment)
     private studentEnrollmentRepository: Repository<StudentEnrollment>,
+    @InjectRepository(SubmissionFile)
+    private submissionFileRepository: Repository<SubmissionFile>
   ) {}
 
   // Submit an assignment
   async submitAssignment(
     studentId: number,
     assignmentId: number,
-    file: Express.Multer.File,
-  ): Promise<Submission> {
-    // 1) Remove "course.students" from relations
-    const assignment = await this.assignmentService.getAssignmentById(
-      assignmentId,
-      ['course', 'course.professor'], // if you need the professor
+    files: Express.Multer.File[],
+  ) {
+    const submission = this.submissionsRepository.create({
+      student: { id: studentId },
+      assignment: { id: assignmentId },
+    });
+
+    const submissionFiles = files.map(file => 
+      this.submissionFileRepository.create({
+        submission,
+        filePath: file.path,
+        originalFileName: file.originalname,
+      })
     );
 
-    if (!assignment) {
-      throw new NotFoundException('Assignment not found.');
-    }
-
-    // 2) Check enrollment via StudentEnrollment pivot table
-    const enrollment = await this.studentEnrollmentRepository.findOne({
-      where: {
-        course: { id: assignment.course.id },
-        student: { id: studentId },
-      },
-    });
-
-    const isEnrolled = !!enrollment;
-    if (!isEnrolled) {
-      throw new ForbiddenException('You are not enrolled in this course.');
-    }
-
-    // 3) Check if the assignment is past due
-    if (new Date() > assignment.dueDate) {
-      throw new ForbiddenException('The assignment submission is past due.');
-    }
-
-    // 4) Check if the student has already submitted
-    const existingSubmission = await this.submissionsRepository.findOne({
-      where: {
-        assignment: { id: assignmentId },
-        student: { id: studentId },
-      },
-    });
-
-    if (existingSubmission) {
-      // Optionally, allow resubmission by removing the old submission
-      await this.submissionsRepository.remove(existingSubmission);
-    }
-
-    // 5) Create and save a new submission
-    const submission = this.submissionsRepository.create({
-      assignment,
-      student: { id: studentId },
-      filePath: file.path,
-      originalFileName: file.originalname,
-    });
-
+    submission.files = submissionFiles;
     return await this.submissionsRepository.save(submission);
   }
 
-  // Get submissions for an assignment (Professor)
+  async getSubmissionFile(
+    userId: number,
+    fileId: number,
+  ) {
+    const file = await this.submissionFileRepository.findOne({
+      where: { id: fileId },
+      relations: [],
+    });
+
+    if (!file) {
+      throw new NotFoundException('Submission file not found');
+    }
+
+
+    return file;
+  }
+  async getStudentSubmissionByAssignment(
+    studentId: number,
+    assignmentId: number,
+  ): Promise<Submission> {
+    // Check if assignment exists
+    const assignment = await this.assignmentService.getAssignmentById(
+      assignmentId,
+      ['course', 'course.professor'],
+    );
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    // Check if student is enrolled in the course
+    const enrollment = await this.studentEnrollmentRepository.findOne({
+      where: {
+        student: { id: studentId },
+        course: { id: assignment.course.id },
+      },
+    });
+
+    if (!enrollment) {
+      throw new ForbiddenException(
+        'Student is not enrolled in this course',
+      );
+    }
+
+    // Get the submission
+    const submission = await this.submissionsRepository.findOne({
+      where: {
+        student: { id: studentId },
+        assignment: { id: assignmentId },
+      },
+      relations: [
+        'student',
+        'files',
+        'assignment',
+
+      ],
+    });
+
+    // Return null if no submission found (this is not an error case)
+    return submission;
+  }
+
   async getSubmissionsForAssignment(
     professorId: number,
     assignmentId: number,

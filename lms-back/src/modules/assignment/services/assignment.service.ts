@@ -10,6 +10,8 @@ import { Course } from '@modules/course/entities/course.entity';
 import { CourseService } from '@modules/course/services/course.service';
 import { Assignment } from '../entities/assignment.entity';
 import { CreateAssignmentDto, UpdateAssignmentDto } from '../dto';
+import { AssignmentResponseDto } from '../dto/assignment/get-assignment.dto';
+import { AssignmentFilesService } from './assignment-file.service';
 
 @Injectable()
 export class AssignmentsService {
@@ -17,6 +19,7 @@ export class AssignmentsService {
     @InjectRepository(Assignment)
     private assignmentRepository: Repository<Assignment>,
     private courseService: CourseService,
+    private assignmentFilesService :AssignmentFilesService,
   ) {}
 
   // Create an assignment within a course
@@ -41,7 +44,11 @@ export class AssignmentsService {
       createdAt: new Date(),
     });
 
-    return await this.assignmentRepository.save(assignment);
+    const savedAssignment = await this.assignmentRepository.save(assignment);
+    return await this.assignmentRepository.findOne({
+      where: { id: savedAssignment.id },
+      relations: ['files']
+    });
   }
 
   // Get assignments for a course
@@ -49,22 +56,20 @@ export class AssignmentsService {
     userId: number,
     courseId: number,
   ): Promise<Assignment[]> {
-    const course = await this.courseService.findOne(courseId, [
-      'professor',
-      'students',
-    ]);
+    
 
     return await this.assignmentRepository.find({
       where: { course: { id: courseId } },
       order: { dueDate: 'ASC' },
+      relations:['files']
     });
   }
 
   // Get a single assignment
   async getAssignmentById(
     assignmentId: number,
-    relations: string[] = ['course', 'course.students', 'course.professor'],
-  ): Promise<Assignment> {
+    relations: string[] = ['files'],
+  ){
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },
       relations: relations,
@@ -73,7 +78,7 @@ export class AssignmentsService {
       throw new NotFoundException('Assignment not found.');
     }
 
-    return assignment;
+    return assignment
   }
 
   // Update an assignment

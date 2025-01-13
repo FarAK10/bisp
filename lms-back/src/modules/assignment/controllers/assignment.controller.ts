@@ -11,23 +11,33 @@ import {
   Req,
   Param,
   Body,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { CreateAssignmentDto, UpdateAssignmentDto } from '../dto';
 import { AssignmentsService } from '../services/assignment.service';
 import { Role } from '@common/constants/roles.enum';
+import { ApiResponse } from '@nestjs/swagger';
+import { AssignmentResponseDto } from '../dto/assignment/get-assignment.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('courses/:courseId/assignments')
 @UseGuards(RolesGuard)
 export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
-
+  
   @Roles(Role.Professor)
   @Post()
+  @ApiResponse({
+    type:UpdateAssignmentDto
+  })
+  @UseInterceptors(FileInterceptor('files'))
+
   async createAssignment(
     @Req() req,
     @Param('courseId') courseId: number,
     @Body() createAssignmentDto: CreateAssignmentDto,
-  ) {
+    @UploadedFiles() files: Array<Express.Multer.File>  ) {
     const professorId = req.user.id;
     return await this.assignmentsService.createAssignment(
       professorId,
@@ -37,9 +47,14 @@ export class AssignmentsController {
   }
 
   @Get()
+  @ApiResponse({
+    type:AssignmentResponseDto,
+    isArray:true
+  })
   async getAssignmentsByCourse(
     @Req() req,
     @Param('courseId') courseId: number,
+    
   ) {
     const userId = req.user.id;
     return await this.assignmentsService.getAssignmentsByCourse(
@@ -47,19 +62,25 @@ export class AssignmentsController {
       courseId,
     );
   }
-
+   @ApiResponse({
+     type:AssignmentResponseDto
+   })
   @Roles(Role.Professor, Role.Admin, Role.Student)
   @Get(':assignmentId')
   async getAssignmentById(
     @Req() req,
     @Param('assignmentId') assignmentId: number,
-  ) {
+  ) :Promise<AssignmentResponseDto>{
     const userId = req.user.id;
-    return await this.assignmentsService.getAssignmentById(assignmentId);
+    const assignment =  await this.assignmentsService.getAssignmentById(assignmentId)
+    return assignment;
   }
 
   @Roles(Role.Professor)
   @Put(':assignmentId')
+  @ApiResponse({
+    type:UpdateAssignmentDto
+  })
   async updateAssignment(
     @Req() req,
     @Param('assignmentId') assignmentId: number,
@@ -75,6 +96,7 @@ export class AssignmentsController {
 
   @Roles(Role.Professor)
   @Delete(':assignmentId')
+  
   async deleteAssignment(
     @Req() req,
     @Param('assignmentId') assignmentId: number,

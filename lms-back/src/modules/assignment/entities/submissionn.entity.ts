@@ -6,9 +6,11 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from '@modules/user/entities/user.entity';
 import { Assignment } from './assignment.entity';
+import { SubmissionFile } from './submission-file.entity';
 @Entity('submissions')
 export class Submission {
   @PrimaryGeneratedColumn()
@@ -19,6 +21,11 @@ export class Submission {
 
   @ManyToOne(() => User, (user) => user.submissions)
   student: User;
+  @OneToMany(() => SubmissionFile, (file) => file.submission, {
+    cascade: true,
+    eager: true,
+  })
+  files: SubmissionFile[];
 
   @Column()
   filePath: string;

@@ -9,19 +9,24 @@ import { UserModule } from '@modules/user/user.module';
 import { AssignmentsController } from './controllers/assignment.controller';
 import { SubmissionsController } from './controllers/submission.controller';
 import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
+import { SubmissionFile } from './entities/submission-file.entity';
+import { AssignmentFile } from './entities/assigment-file.entity';
+import { AssignmentFilesController } from './controllers/assigmnet-file.controller';
+import { AssignmentFilesService } from './services/assignment-file.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Assignment, Submission, StudentEnrollment]),
+    TypeOrmModule.forFeature([Assignment, Submission, StudentEnrollment,SubmissionFile,AssignmentFile]),
     CourseModule,
     UserModule,
   ],
-  controllers: [AssignmentsController, SubmissionsController],
-  providers: [AssignmentsService, SubmissionsService],
+  controllers: [AssignmentsController, SubmissionsController,AssignmentFilesController],
+  providers: [AssignmentsService, SubmissionsService,AssignmentFilesService],
   exports: [
     AssignmentsService,
     SubmissionsService,
     TypeOrmModule.forFeature([Assignment, Submission]),
+    AssignmentFilesService,
   ],
 })
 export class AssignmentModule {}
