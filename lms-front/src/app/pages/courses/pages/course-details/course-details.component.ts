@@ -8,11 +8,12 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { CourseInfoComponent } from './components/course-info/course-info.component';
 import { AssignmentsComponent } from './components/assignments/assignments.component';
+import { AssignmentFormComponent } from "./components/assignments/components/assignment-form/assignment-form.component";
 
 @Component({
   selector: 'app-course-details',
   standalone: true,
-  imports: [CommonModule,CourseInfoComponent,CourseLecturesComponent,NzCardModule,NzTabsModule,AssignmentsComponent],
+  imports: [CommonModule, CourseInfoComponent, CourseLecturesComponent, NzCardModule, NzTabsModule, AssignmentsComponent, AssignmentFormComponent],
   templateUrl: './course-details.component.html',
   styleUrl: './course-details.component.less'
 })

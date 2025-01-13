@@ -9,13 +9,14 @@ import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap, take } from 'rxjs';
-import { AssignmentsControllerClient, FileParameter, GradeSubmissionDto, SubmissionResponseDto, SubmissionsControllerClient } from '../../../../core/api/lms-api';
+import { switchMap, take, tap } from 'rxjs';
+import { AssignmentsControllerClient, FileParameter, GradeSubmissionDto, SubmissionFileResponseDto, SubmissionResponseDto, SubmissionsControllerClient } from '../../../../core/api/lms-api';
 import { SUBMISSION_PAGES } from '../../../../core/constants/routes/submission';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { AuthStore } from '../../../../store/auth';
 import { ASSIGNMETS_PAGES } from '../../../../core/constants/routes/assignments';
 import { NzTagModule } from 'ng-zorro-antd/tag';
+import { FileService } from '../../../../core/services/file.service';
 
 @Component({
   selector: 'app-submission-details',
@@ -42,20 +43,21 @@ export class SubmissionDetailsComponent {
   private message = inject(NzMessageService);
   private destroyRef = inject(DestroyRef);
   private authStore = inject(AuthStore);
+  private fileService = inject(FileService)
   user = this.authStore.user
   
   submission = signal<SubmissionResponseDto | null>(null);
 
-  assignmentId = signal(+this.route.params[ASSIGNMETS_PAGES.assignmnetId])
+  assignmentId = signal(+this.route.snapshot.params[ASSIGNMETS_PAGES.assignmnetId])
 
-  assignmentDetails$ =  toObservable(this.assignmentId).pipe(switchMap(assignmentId=> this.assignmentClient.getAssignmentById(assignmentId)))
+  assignmentDetails$ =  toObservable(this.assignmentId).pipe(tap(console.log),switchMap(assignmentId=> this.assignmentClient.getAssignmentById(assignmentId)))
   assignmentDetails = toSignal(this.assignmentDetails$)
   
   gradeForm = this.fb.group({
     grade: [null as number | null, [Validators.required, Validators.min(0), Validators.max(100)]],
     feedback: ['']
   });
-
+  studentId = signal(+this.route.snapshot.params[SUBMISSION_PAGES.studentId])
   uploadHeaders = {
     Authorization: `Bearer ${localStorage.getItem('token')}`
   };
@@ -69,19 +71,17 @@ export class SubmissionDetailsComponent {
   }
 
   ngOnInit() {
-    const assignmentId = this.route.snapshot.queryParams['assignmentId'];
     
     if (this.isStudentSubmission()) {
-      // Load student's submission and assignment details
-      this.loadStudentSubmissionAndDetails(assignmentId);
+      this.loadStudentSubmissionAndDetails();
     } else {
-      // Load professor's view of student submission
-      const studentId = this.route.snapshot.params[SUBMISSION_PAGES.studentId];
-      this.loadSubmission(studentId, assignmentId);
+      console.log(this.route.snapshot.params)
+    
+      this.loadSubmission(this.studentId(), this.assignmentId());
     }
   }
-  loadStudentSubmissionAndDetails(assignmentId: string) {
-    this.submissionClient.getStudentSubmissionByAssignment(this.user().id,+assignmentId)
+  loadStudentSubmissionAndDetails() {
+    this.submissionClient.getStudentSubmissionByAssignment(this.user().id,this.assignmentId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -91,11 +91,12 @@ export class SubmissionDetailsComponent {
       });
   }
   isStudentSubmission(): boolean {
-    return this.route.snapshot.url[0]?.path === SUBMISSION_PAGES.submit;
+    return  !this.studentId();
   }
 
-  loadSubmission(studentId: string, assignmentId: string) {
-    this.submissionClient.getStudentSubmissionByAssignment(+studentId, +assignmentId)
+  loadSubmission(studentId: number, assignmentId:  number) {
+    console.log(studentId,assignmentId,'assignment')
+    this.submissionClient.getStudentSubmissionByAssignment(+studentId,this.assignmentId()) 
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
@@ -179,20 +180,14 @@ export class SubmissionDetailsComponent {
     if (info.file.status === 'done') {
       this.loadSubmission(
         this.route.snapshot.params['studentId'],
-        this.route.snapshot.queryParams['assignmentId']
+         this.assignmentId(),
       );
     }
   }
 
-  downloadFile(file: any) {
-    this.submissionClient.downloadSubmissionFile(file.id).subscribe(response => {
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.originalFileName;
-      link.click();
-      window.URL.revokeObjectURL(url);
+  downloadFile(file: SubmissionFileResponseDto) {
+    this.submissionClient.downloadSubmissionFile(file.id).pipe(take(1)).subscribe(response => {
+        this.fileService.downloadFile(response.data,file.originalFileName)
     });
   }
 

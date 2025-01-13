@@ -19,6 +19,7 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { ROOT_ROUTES } from '../../../../../../core/constants';
 import { PermissionDirective } from '../../../../../../shared/directives/role.directive';
+import { SUBMISSION_PAGES } from '../../../../../../core/constants/routes/submission';
 
 @Component({
   selector: 'app-assignments',
@@ -57,7 +58,7 @@ route = inject(ActivatedRoute)
   
   }
   goToAssignmnetDetails(assignment:AssignmentResponseDto):void {
-    this.router.navigate([ROOT_ROUTES.assignments,assignment.id]);
+    this.router.navigate([ROOT_ROUTES.assignments,assignment.id,SUBMISSION_PAGES.submit]);
 
   }
   viewSubmissions(assignment:AssignmentResponseDto):void {

@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { CourseCardComponent } from '../../../../shared/components';
 import { AuthStore } from '../../../../store/auth';
-import { Role } from '../../../../core/constants';
+import { Role, ROOT_ROUTES } from '../../../../core/constants';
 import { CourseControllerClient, GetCourseDto } from '../../../../core/api/lms-api';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { switchMap } from 'rxjs';
@@ -34,7 +34,7 @@ export class MyCoursesListComponent {
 
   courses = toSignal(this.courses$)
   viewDetails(course:GetCourseDto){
-    this.router.navigate([course.id],{relativeTo:this.route})
+    this.router.navigate([ROOT_ROUTES.courses,course.id],{})
 
   }
   
