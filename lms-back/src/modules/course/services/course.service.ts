@@ -100,6 +100,33 @@ export class CourseService {
     };
   }
 
+  async getCoursesToEnroll(studentId: number): Promise<Course[]> {
+    return this.courseRepository
+      .createQueryBuilder('course')
+      .leftJoinAndSelect('course.professor', 'professor')
+      .leftJoinAndSelect('course.schedules', 'schedules')
+      .leftJoin('course.enrollments', 'enrollment')
+      .leftJoin('enrollment.student', 'student')
+      .where(qb => {
+        const subQuery = qb
+          .subQuery()
+          .select('enrollment.courseId')
+          .from(StudentEnrollment, 'enrollment')
+          .where('enrollment.student = :studentId')
+          .andWhere('enrollment.status IN (:...statuses)')
+          .getQuery();
+        return 'course.id NOT IN ' + subQuery;
+      })
+      .setParameter('studentId', studentId)
+      .setParameter('statuses', [
+        EnrollmentStatus.ENROLLED,
+        EnrollmentStatus.WAITLISTED,
+        EnrollmentStatus.COMPLETED
+      ])
+      .getMany();
+  }
+  
+
   async findOne(
     id: number,
     relations: string[] = ['professor', 'schedules'],
@@ -325,30 +352,39 @@ export class CourseService {
     if (!course) {
       throw new NotFoundException(`Course with id ${courseId} does not exist.`);
     }
+  
     const student = await this.userService.findOne(studentId);
     if (!student) {
       throw new NotFoundException(`Student with id ${studentId} does not exist.`);
     }
+  
     const existingEnrollment = await this.studentEnrollmentRepository
-                                     .createQueryBuilder('enrollment')
-                                    .where('enrollment.courseId = :courseId',{courseId})
-                                    .andWhere('enrollment.student = :studentId', {studentId})
-                                    .andWhere('enrollment.status IN (:...statuses)', {
-                                       statuses: [EnrollmentStatus.ENROLLED,EnrollmentStatus.WAITLISTED]
-                                    })
-                                    .getOne();
-    if(existingEnrollment){
-      throw new ConflictException( `Student with id ${studentId} is already enrolled or waitlisted for course with id ${courseId}.`
-      )
+      .createQueryBuilder('enrollment')
+      .where('enrollment.courseId = :courseId', { courseId })
+      .andWhere('enrollment.student = :studentId', { studentId })
+      .getOne();
+  
+    if (existingEnrollment && 
+        [EnrollmentStatus.ENROLLED, EnrollmentStatus.WAITLISTED].includes(existingEnrollment.status)) {
+      throw new ConflictException(
+        `Student with id ${studentId} is already enrolled or waitlisted for course with id ${courseId}.`
+      );
     }
-     
+  
+    if (existingEnrollment && existingEnrollment.status === EnrollmentStatus.DROPPED) {
+      existingEnrollment.status = EnrollmentStatus.ENROLLED;
+      existingEnrollment.enrollmentDate = new Date(); 
+      existingEnrollment.finalGrade = null; 
+      return this.studentEnrollmentRepository.save(existingEnrollment);
+    }
+  
     const enrollment = this.studentEnrollmentRepository.create({
       course,
       student,
       enrollmentDate: new Date(),
       status: EnrollmentStatus.ENROLLED,
     });
-
+  
     return this.studentEnrollmentRepository.save(enrollment);
   }
 

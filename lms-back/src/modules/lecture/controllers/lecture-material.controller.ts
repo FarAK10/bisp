@@ -36,7 +36,7 @@ export class LectureMaterialsController {
   @UseGuards(RolesGuard)
   @Roles(Role.Professor)
   @Post('upload')
-  @ApiConsumes('multipart/form-data') // Specifies the content type for file upload
+  @ApiConsumes('multipart/form-data') 
   @ApiBody({
     description: 'Upload a lecture material file (PDF, DOC, DOCX, XLS, XLSX)',
     schema: {
@@ -72,7 +72,6 @@ export class LectureMaterialsController {
   ) {
     const professorId = req.user.id;
     
-    // Update the filePath to use forward slashes
     file.path = file.path.replace(/\\/g, '/');
     
     return await this.lectureMaterialsService.uploadMaterial(
@@ -130,10 +129,6 @@ async downloadMaterial(
     materialId,
   );
 
-  // Use path.join to create absolute path
-
-
-  // Set the Content-Disposition header
   res.setHeader(
     'content-disposition',
     `attachment; filename="${encodeURIComponent(material.originalName)}"`

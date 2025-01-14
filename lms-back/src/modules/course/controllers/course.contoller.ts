@@ -13,6 +13,7 @@ import {
   Request,
   ParseIntPipe,
   Query,
+  Req,
 } from '@nestjs/common';
 import { CreateCourseDto } from '../dto/create-course.dto';
 import { UpdateCourseDto } from '../dto/update-course.dto';
@@ -20,6 +21,7 @@ import { GetCourseDto } from '../dto/get-course.dto';
 import { CourseService } from '../services/course.service';
 import {
   ApiConflictResponse,
+  ApiCreatedResponse,
   ApiInternalServerErrorResponse,
   ApiOperation,
   ApiProperty,
@@ -35,8 +37,9 @@ import { StudentCoursesFilterDto } from '../dto/student-course-filter.dto';
 import { GetEnrolledCourseDto } from '../dto/get-enrolled-course.dto';
 import { CourseWithLecturesResponseDto } from '../dto/course-with-lectures.dto';
 import { ApiErroResponses } from '@common/decorators/common-issue-response';
-@ApiBearerAuth('access-token') // Use the same name as in addBearerAuth()
-@ApiTags('courses') // Adds a "users" tag in Swagger
+import { User } from '@modules/user/entities/user.entity';
+@ApiBearerAuth('access-token')
+@ApiTags('courses') 
 @Controller('courses')
 @UseGuards(RolesGuard)
 export class CourseController {
@@ -91,6 +94,16 @@ export class CourseController {
   async getCourseDetailsWithLecturesById(@Param('id', ParseIntPipe) courseId: number) {
     return this.courseService.getCourseWithLecturesById(courseId);
   }
+  
+
+  @Get('course-to-enroll')
+  @ApiResponse({type:GetCourseDto,isArray:true})
+  @Roles(Role.Student)
+  async getCoursesToEnroll(@Req() req){
+    const student:User = req.user;
+    return this.courseService.getCoursesToEnroll(student.id)
+  }
+
 
   @ApiResponse({
     type: GetCourseDto,
@@ -120,15 +133,18 @@ export class CourseController {
   @ApiErroResponses()
   @ApiConflictResponse({type:ErrorResponse})
   @Post(':id/enroll')
+  @ApiCreatedResponse()
 
   @Roles(Role.Student)
   async enroll(@Param('id', ParseIntPipe) id: number, @Request() req) {
     return this.courseService.enrollStudent(id, req.user.id);
   }
+  
   @ApiErroResponses()
   @Post(':id/unenroll')
   @Roles(Role.Student)
-  async unenroll(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.courseService.unenrollStudentFromCourse(id, req.user.id);
+  @ApiCreatedResponse()
+  async unenroll(@Param('id', ParseIntPipe) courseId: number, @Request() req) {
+    return this.courseService.unenrollStudentFromCourse(courseId, req.user.id);
   }
 }

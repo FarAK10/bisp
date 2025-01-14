@@ -54,15 +54,12 @@ export class LectureMaterialsService {
     userId: number,
     lectureId: number,
   ): Promise<LectureMaterial[]> {
-    // 1) We still fetch the lecture using lectureService.getLectureById
-    //    but we do not rely on 'course.students' inside that method.
+
     const lecture = await this.lectureService.getLectureById(userId, lectureId);
 
-    // 2) Check if this user is the professor
     const course = lecture.course;
     const isProfessor = course.professor.id === userId;
 
-    // 3) Check if this user is enrolled via StudentEnrollment
     const enrollment = await this.studentEnrollmentRepository.findOne({
       where: {
         course: { id: course.id },
