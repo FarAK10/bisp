@@ -21,6 +21,8 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { CourseCardComponent } from '../../../../shared/components';
 import { COURSES_ROUTES } from '../../../../core/constants/routes/courses';
 import { Role } from '../../../../core/constants';
+import { PermissionDirective } from '../../../../shared/directives/role.directive';
+import { AuthStore } from '../../../../store/auth';
 
 @Component({
   selector: 'app-course-list',
@@ -31,6 +33,7 @@ import { Role } from '../../../../core/constants';
     FormsModule,
     NzButtonModule,
     CourseCardComponent,
+    PermissionDirective,
   ],
   templateUrl: './course-list.component.html',
   styleUrl: './course-list.component.less',
@@ -43,6 +46,7 @@ export class CourseListComponent {
   messageService = inject(MessageService);
   page$ = new BehaviorSubject<number>(1);
   pageSize$ = new BehaviorSubject<number>(10);
+  authStore = inject(AuthStore);
   updateTable$ = new BehaviorSubject<boolean>(true);
   tableRes$ = combineLatest([
     this.page$,

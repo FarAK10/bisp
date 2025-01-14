@@ -33,6 +33,13 @@ export const APP_ROUTES: AppRoute[] = [
     title: 'Assignments',
     icon: 'group',
     roles:[Role.Admin,Role.Professor,Role.Student],
+  },
+  {
+    path:ROOT_ROUTES.enrollCourses,
+    loadChildren:()=> import('../../pages/enroll-to-courses/routes').then(r=>r.routes),
+    title:'Courses to enroll',
+    icon:'book',
+    roles:[Role.Student]
   }
 
 ];

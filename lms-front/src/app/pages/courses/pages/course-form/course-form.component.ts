@@ -141,7 +141,7 @@ export class CourseFormComponent implements OnInit {
   }
 
   back(): void {
-    this.router.navigate(['../'], { relativeTo: this.route });
+    this.router.navigate(['../../'], { relativeTo: this.route });
   }
   private editCourse(): void {
     const formValue = this.courseForm.value;

@@ -6,5 +6,6 @@ export enum ROOT_ROUTES {
   lectures = 'lectures',
   submissions = 'submissions',
   assignments = 'assigmnents',
+  enrollCourses= 'enroll-course'
 
 }

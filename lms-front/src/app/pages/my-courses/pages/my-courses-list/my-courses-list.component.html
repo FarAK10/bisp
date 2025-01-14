@@ -1,17 +1,28 @@
-<div class="flex flex-wrap gap-4">
-    @for(course of courses();track course.id){
+<div >
+  <div class="mb-3">
+    <nz-select [(ngModel)]="selectedEnrolledStatus">
+      @for(status of statuses;track status.label){
+        <nz-option [nzLabel]="status.label" [nzValue]="status.value"></nz-option>
+      }
+    </nz-select>
+  </div>
+   <div class="flex flex-wrap gap-4"> @for(course of courses();track course.id){
     <app-course-card
   
       [course]="course"
     >
-    <div actions>
+    <div class="flex" actions>
         <button (click)="viewDetails(course)" class="mx-auto block" nz-button>
             View Details
             </button>
+         <button *permission="[role.Student]" (click)="unEnroll(course)" class="mx-auto block" nz-button>
+              Unenroll
+          </button>
      
     </div>
    
     </app-course-card
-    >}
+    >}</div>
+   
   </div>
   

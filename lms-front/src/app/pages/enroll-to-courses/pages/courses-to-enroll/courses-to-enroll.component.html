@@ -1,0 +1,17 @@
+<div class="flex flex-wrap gap-4">
+    @for(course of courses();track course.id){
+    <app-course-card
+  
+      [course]="course"
+    >
+    <div actions>
+        <button (click)="enroll(course)" class="mx-auto block" nz-button>
+            enroll
+            </button>
+     
+    </div>
+   
+    </app-course-card
+    >}
+  </div>
+  

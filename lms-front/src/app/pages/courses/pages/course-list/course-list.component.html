@@ -1,5 +1,7 @@
 <div class="flex justify-end mb-2">
-  <button nz-button nzType="primary" (click)="onCreate()">Create</button>
+ 
+    <button  *permission="[role.Admin]" nz-button nzType="primary" (click)="onCreate()">Create</button>
+  
 </div>
 <div class="flex flex-wrap gap-4">
   @for(course of courses();track course.id){
@@ -14,7 +16,7 @@
     <button (click)="onEdit(course)" class="mx-auto block" nz-button>
       Edit Course
     </button>
-    <button nz-button (click)="enroll(course)">enroll to course</button>
+    <button *permission="[role.Student]" nz-button (click)="enroll(course)">enroll to course</button>
   </div>
  
   </app-course-card
