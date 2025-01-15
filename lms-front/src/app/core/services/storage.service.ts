@@ -14,11 +14,22 @@ export class StorageService {
   }
 
   get userRole():Role {
-    return localStorage.getItem(STORAGE_KEY.user_role) as Role
+    const role  =      localStorage.getItem(STORAGE_KEY.user_role)
+    if(role){
+      return role as Role;
+    }
+    return null;
   }
 
   set userRole(role:Role) {
-     localStorage.setItem(STORAGE_KEY.user_role, role)
+    if(role){
+      localStorage.setItem(STORAGE_KEY.user_role, role)
+
+    }
+  }
+
+  removeUserRole():void {
+     localStorage.removeItem(STORAGE_KEY.user_role)
   }
 
   get refreshToken(): string {

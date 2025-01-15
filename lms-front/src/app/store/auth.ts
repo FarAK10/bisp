@@ -70,9 +70,9 @@ export class AuthStore extends signalStore(
         tap({
           next: (user: GetUserDto) => {
             const userRole =  storage.userRole || user.roles[0] as Role;
-
+            
+            console.log(userRole,'userrolke')
             patchState(store, { user, error: null,selectedRole:userRole });
-
          
             console.log(store.selectedRole())
           },
@@ -128,7 +128,7 @@ export class AuthStore extends signalStore(
       signOut() {
         authService.signOut();
         patchState(store, { user: null });
-        storage.userRole = null;
+        storage.removeUserRole()
       },
       setRole
     };

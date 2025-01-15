@@ -159,7 +159,6 @@ export class CourseService {
       .leftJoinAndSelect('course.lectures', 'lectures')
       .where('enrollment.student = :studentId', { studentId });
   
-    // Apply filters
     if (filters) {
       if (filters.status) {
         query.andWhere('enrollment.status = :status', { status: filters.status });
@@ -215,7 +214,6 @@ export class CourseService {
       .leftJoinAndSelect('enrollments.student', 'student')
       .where('course.professor = :profId', { profId });
   
-    // Apply filters
     if (filters) {
       if (filters.search) {
         query.andWhere(
@@ -288,12 +286,10 @@ export class CourseService {
       course.professor = professor;
     }
 
-    // Combine new and updated schedules
     const { newSchedules, updatedSchedules, ...lectureData } = updateCourseDto;
     const allSchedules = [...newSchedules, ...updatedSchedules];
 
     if (allSchedules.length > 0) {
-      // Batch conflict check
       const conflicts = await this.scheduleService.checkBatchScheduleConflicts(
         allSchedules as any,
       );
@@ -311,12 +307,10 @@ export class CourseService {
         );
       }
 
-      // Delete existing schedules only when there are changes
       if (course.schedules && course.schedules.length > 0) {
         await this.scheduleService.deleteSchedules(course.schedules);
       }
 
-      // Batch create and update schedules
       const updatedSchedulePromises = updatedSchedules.map((scheduleDto) =>
         this.scheduleService.update(scheduleDto.id, scheduleDto),
       );

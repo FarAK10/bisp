@@ -33,10 +33,11 @@ export class UserController {
     private userProfile: UserProfile,
   ) {}
   @ApiResponse({
-    status: 200,
+    status: 201,
     type: GetUserDto,
   })
   @Public()
+
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     try {
