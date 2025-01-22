@@ -12,12 +12,14 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TableResponseDto } from '@common/dto/table.dto';
 import { GetUserDto } from '../dto/get-user.dto';
+import { MailService } from '@modules/mail/services/mail.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private mailService:MailService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -40,6 +42,7 @@ export class UserService {
       roles, // Default to 'Student' if no role is provided
     });
 
+    await this.mailService.sendUserCredentials(createUserDto.email,createUserDto.password,createUserDto.firstName)
     return this.userRepository.save(user);
   }
 
@@ -107,9 +110,7 @@ export class UserService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
-   
-
-    await this.userRepository.update(id, { ...updateUserDto });
+    await this.userRepository.update(id, { ...updateUserDto,password:user.password});
 
     return this.findOne(id);
   }

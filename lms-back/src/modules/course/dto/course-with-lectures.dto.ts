@@ -15,7 +15,7 @@ import { LectureDto } from "@modules/lecture/dto/lecture/get-lecture.dto";
 import { EnrollmentResponseDto } from "./enrollment-response.dto";
 export class CourseWithLecturesResponseDto extends GetCourseDto {
    
-  
+
     @ApiProperty({ type: GetUserDto })
     @ValidateNested()
     @Type(() => GetUserDto)

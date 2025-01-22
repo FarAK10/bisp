@@ -31,14 +31,6 @@ export class Course {
   @ManyToOne(() => User, (user) => user.coursesTaught, { eager: true })
   professor: User;
 
-  // Remove or comment out the ManyToMany if you're using the new pivot table
-  // @ManyToMany(() => User, (user) => user.coursesEnrolled)
-  // @JoinTable({
-  //   name: 'course_students',
-  //   joinColumn: { name: 'course_id', referencedColumnName: 'id' },
-  //   inverseJoinColumn: { name: 'student_id', referencedColumnName: 'id' },
-  // })
-  // students: User[];
 
   @OneToMany(() => Assignment, (assignment) => assignment.course)
   assignments: Assignment[];
@@ -52,7 +44,6 @@ export class Course {
   @OneToMany(() => AttendanceRecord, (record) => record.course)
   attendaceRecords: AttendanceRecord[];
 
-  // New relationship to the StudentEnrollment entity
   @OneToMany(() => StudentEnrollment, (enrollment) => enrollment.course)
   enrollments: StudentEnrollment[];
 

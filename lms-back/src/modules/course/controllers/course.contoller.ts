@@ -49,6 +49,7 @@ export class CourseController {
   @Roles(Role.Admin)
   @ApiResponse({ status: 409, type: ErrorResponse })
   @ApiInternalServerErrorResponse({ type: ErrorResponse })
+  @ApiCreatedResponse()
   async create(@Body() createCourseDto: CreateCourseDto, @Request() req) {
     return this.courseService.create(createCourseDto, req.user.id);
   }

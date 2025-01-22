@@ -39,6 +39,7 @@ export class LectureMaterial {
     onDelete: 'CASCADE' 
   })  lecture: Lecture;
 
-  @ManyToOne(() => Course, (course) => course.professor)
+  @ManyToOne(() => User)
   uploadedBy: User;
+
 }

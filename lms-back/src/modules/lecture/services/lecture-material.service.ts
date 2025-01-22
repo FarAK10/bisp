@@ -38,6 +38,7 @@ export class LectureMaterialsService {
         'You are not authorized to upload materials for this lecture.',
       );
     }
+    const professor = await this.userService.findOne(professorId);
 
     const lectureMaterial = this.lectureMaterialsRepository.create({
       originalName: file.originalname,
@@ -45,7 +46,7 @@ export class LectureMaterialsService {
       filePath: file.path,
       mimetype: file.mimetype,
       lecture,
-      uploadedBy: { id: professorId } as User,
+      uploadedBy:professor
     });
     return await this.lectureMaterialsRepository.save(lectureMaterial);
   }

@@ -99,25 +99,11 @@ export class SubmissionsService {
       throw new NotFoundException('Assignment not found');
     }
 
-    // Check if student is enrolled in the course
-    const enrollment = await this.studentEnrollmentRepository.findOne({
-      where: {
-        student: { id: studentId },
-        course: { id: assignment.course.id },
-      },
-    });
-
-    if (!enrollment) {
-      throw new ForbiddenException(
-        'Student is not enrolled in this course',
-      );
-    }
-
-    // Get the submission
+   
     const submission = await this.submissionsRepository.findOne({
       where: {
-        student: { id: studentId },
-        assignment: { id: assignmentId },
+        student: { id: +studentId },
+        assignment: { id: +assignmentId },
       },
       relations: [
         'student',
