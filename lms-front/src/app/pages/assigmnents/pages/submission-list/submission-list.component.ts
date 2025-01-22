@@ -48,7 +48,7 @@ export class SubmissionListComponent implements OnInit {
     if (submission.grade !== null) return 'green';
     return 'orange';
   }
-  viewSubmission(submissionId: number) {
-    this.router.navigate([submissionId],{relativeTo:this.route});
+  viewSubmission(studentId: number) {
+    this.router.navigate([studentId],{relativeTo:this.route});
   }
 }

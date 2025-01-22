@@ -31,8 +31,11 @@
           <h3 class="text-lg font-semibold mb-2">Schedule</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <nz-card *ngFor="let schedule of course.schedules" class="shadow-sm">
+              <h6 class="font-bold">{{ schedule.type }}</h6>
+
               <p class="font-medium">Room {{ schedule.roomNumber }}</p>
-              <p>{{ schedule.dayOfWeek }}</p>
+              <p>{{ weeksENum[schedule.dayOfWeek] }}</p>
+
               <p>{{ schedule.startTime | date:'shortTime' }} - {{ schedule.endTime | date:'shortTime' }}</p>
             </nz-card>
           </div>

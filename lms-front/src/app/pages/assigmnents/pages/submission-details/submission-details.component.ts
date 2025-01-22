@@ -77,6 +77,7 @@ export class SubmissionDetailsComponent {
   }
 
   loadData():void {
+    console.log(this.route.snapshot.params)
 
     if (this.isStudentSubmission()) {
       this.loadStudentSubmissionAndDetails();

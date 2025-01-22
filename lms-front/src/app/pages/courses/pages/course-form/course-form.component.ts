@@ -141,7 +141,13 @@ export class CourseFormComponent implements OnInit {
   }
 
   back(): void {
-    this.router.navigate(['../../'], { relativeTo: this.route });
+    if(this.courseId()){
+      this.router.navigate(['../../'], { relativeTo: this.route });
+
+    } else {
+      this.router.navigate(['../'], { relativeTo: this.route });
+
+    }
   }
   private editCourse(): void {
     const formValue = this.courseForm.value;
@@ -159,7 +165,7 @@ export class CourseFormComponent implements OnInit {
     this.courseClient.update(this.courseId(), courseDTO).subscribe({
       next: () => {
         this.messageService.onNotifySuccess('Course updated successfully');
-        this.router.navigate(['../'], { relativeTo: this.route });
+       this.back();
       },
       error: (err: HttpErrorResponse) => {
         console.log(err);

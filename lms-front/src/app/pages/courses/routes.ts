@@ -12,6 +12,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: `create`,
+    loadComponent: () =>
+      import('./pages/course-form/course-form.component').then(
+        (c) => c.CourseFormComponent
+      ),
+    resolve: { data: CourseDetailsResolver },
+  },
+  {
     path: `${COURSES_ROUTES.edit}/:${COURSES_ROUTES.courseId}`,
     loadComponent: () =>
       import('./pages/course-form/course-form.component').then(

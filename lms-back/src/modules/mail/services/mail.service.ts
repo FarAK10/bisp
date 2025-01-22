@@ -7,7 +7,7 @@ export class MailService {
 
 
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(this.configService.get('EMAIL_TOKEN')); // Your Resend API key
+    this.resend = new Resend(this.configService.get('EMAIL_TOKEN')); 
 
   }
 
