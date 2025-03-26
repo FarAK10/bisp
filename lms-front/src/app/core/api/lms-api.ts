@@ -2190,12 +2190,21 @@ export interface ISubmissionsControllerClient {
      * @param file (optional) Allowed file types: .pdf, .doc, .docx, .xls, .xlsx
      */
     submitAssignment(assignmentId: number, file?: FileParameter | undefined): Observable<void>;
+    /**
+     * Analyze student submission using GPT
+     */
+    analyzeSubmission(assignmentId: number): Observable<GPTFeedbackDto>;
     getSubmissionsForAssignment(assignmentId: number): Observable<SubmissionResponseDto[]>;
     /**
      * Get student submission for an assignment
      * @return Returns the student submission for the assignment
      */
     getStudentSubmissionByAssignment(studentId: number, assignmentId: number): Observable<SubmissionResponseDto>;
+    /**
+     * Delete a submission file
+     * @return File deleted successfully
+     */
+    deleteSubmissionFile(fileId: number): Observable<void>;
     /**
      * @return File downloaded successfully
      */
@@ -2272,6 +2281,54 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
             }));
         }
         return _observableOf(null as any);
+    }
+
+    /**
+     * Analyze student submission using GPT
+     */
+    analyzeSubmission(assignmentId: number): Observable<GPTFeedbackDto> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/analyze";
+        if (assignmentId === undefined || assignmentId === null)
+            throw new Error("The parameter 'assignmentId' must be defined.");
+        url_ = url_.replace("{assignmentId}", encodeURIComponent("" + assignmentId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processAnalyzeSubmission(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processAnalyzeSubmission(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<GPTFeedbackDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<GPTFeedbackDto>;
+        }));
+    }
+
+    protected processAnalyzeSubmission(response: HttpResponseBase): Observable<GPTFeedbackDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let resultdefault: any = null;
+            resultdefault = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as GPTFeedbackDto;
+            return _observableOf(resultdefault);
+            }));
+        }
     }
 
     getSubmissionsForAssignment(assignmentId: number): Observable<SubmissionResponseDto[]> {
@@ -2375,6 +2432,65 @@ export class SubmissionsControllerClient implements ISubmissionsControllerClient
         } else if (status === 404) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("Assignment not found", status, _responseText, _headers);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * Delete a submission file
+     * @return File deleted successfully
+     */
+    deleteSubmissionFile(fileId: number): Observable<void> {
+        let url_ = this.baseUrl + "/assignments/{assignmentId}/submissions/files/{fileId}";
+        if (fileId === undefined || fileId === null)
+            throw new Error("The parameter 'fileId' must be defined.");
+        url_ = url_.replace("{fileId}", encodeURIComponent("" + fileId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processDeleteSubmissionFile(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processDeleteSubmissionFile(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processDeleteSubmissionFile(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Not authorized to delete this file", status, _responseText, _headers);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("File not found", status, _responseText, _headers);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -3394,6 +3510,16 @@ export interface AssignmentResponseDto {
     createdAt: Date;
     /** When the assignment was last updated */
     updatedAt: Date;
+
+    [key: string]: any;
+}
+
+export interface GPTFeedbackDto {
+    score: number;
+    feedback: string;
+    matchedRequirements: string[];
+    missingRequirements: string[];
+    suggestions: string[];
 
     [key: string]: any;
 }

@@ -13,6 +13,9 @@ import { AssignmentsService } from './assignment.service';
 import { UserService } from '@modules/user/services/user.service';
 import { StudentEnrollment } from '@modules/course/entities/student-entrollment.entity';
 import { SubmissionFile } from '../entities/submission-file.entity';
+import { GPTFeedbackDto } from '@modules/openai/dto/gpt-feedback.dto';
+import { GPTAnalysisService } from '@modules/openai/services/gpt-analysis.service';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class SubmissionsService {
@@ -26,6 +29,8 @@ export class SubmissionsService {
     @InjectRepository(SubmissionFile)
     private submissionFileRepository: Repository<SubmissionFile>,
     private dataSource:DataSource,
+    private gptAnalysisService: GPTAnalysisService,
+
   ) {}
 
   async submitAssignment(
@@ -68,7 +73,67 @@ export class SubmissionsService {
     });
   
   }
+  async deleteSubmissionFile(
+    userId: number,
+    fileId: number,
+  ): Promise<void> {
+    const file = await this.submissionFileRepository.findOne({
+      where: { id: fileId },
+      relations: ['submission', 'submission.student']
+    });
 
+    if (!file) {
+      throw new NotFoundException('Submission file not found');
+    }
+
+    if (file.submission.student.id !== userId) {
+      throw new ForbiddenException('You are not authorized to delete this file');
+    }
+
+    const submissionFiles = await this.submissionFileRepository.find({
+      where: { submission: { id: file.submission.id } }
+    });
+
+
+    try {
+      await fs.unlink(file.filePath);
+    } catch (error) {
+      console.error('Error deleting physical file:', error);
+    }
+
+    await this.submissionFileRepository.remove(file);
+  }
+  
+  async analyzeSubmissionWithGPT(
+    studentId: number, 
+    assignmentId: number
+  ): Promise<GPTFeedbackDto> {
+    const assignment = await this.assignmentService.getAssignmentById(
+      assignmentId, 
+      ['files']
+    );
+
+    const submission = await this.getStudentSubmissionByAssignment(
+      studentId, 
+      assignmentId
+    );
+
+    if (!submission || !submission.files || submission.files.length === 0) {
+      throw new NotFoundException('No submission files found');
+    }
+
+    const requirementsFile = assignment.files.length > 0 
+      ? assignment.files[0].filePath 
+      : null;
+
+    const submissionFilePaths = submission.files.map(file => file.filePath);
+
+    return await this.gptAnalysisService.analyzeMultipleSubmissions(
+      requirementsFile,
+      submissionFilePaths,
+    );
+  }
+  
   async getSubmissionFile(
     userId: number,
     fileId: number,
@@ -114,7 +179,6 @@ export class SubmissionsService {
     });
   
 
-    // Return null if no submission found (this is not an error case)
     return submission;
   }
 
@@ -140,7 +204,6 @@ export class SubmissionsService {
     });
   }
 
-  // Get submission by ID (Student or Professor)
   async getSubmissionById(
     submissionId: number,
     relations: string[] = [

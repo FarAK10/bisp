@@ -10,13 +10,15 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap, take, tap } from 'rxjs';
-import { AssignmentFileResponseDto, AssignmentFilesControllerClient, AssignmentsControllerClient, FileParameter, GradeSubmissionDto, SubmissionFileResponseDto, SubmissionResponseDto, SubmissionsControllerClient } from '../../../../core/api/lms-api';
+import { AssignmentFileResponseDto, AssignmentFilesControllerClient, AssignmentsControllerClient, FileParameter, GPTFeedbackDto, GradeSubmissionDto, SubmissionFileResponseDto, SubmissionResponseDto, SubmissionsControllerClient } from '../../../../core/api/lms-api';
 import { SUBMISSION_PAGES } from '../../../../core/constants/routes/submission';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { AuthStore } from '../../../../store/auth';
 import { ASSIGNMETS_PAGES } from '../../../../core/constants/routes/assignments';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { FileService } from '../../../../core/services/file.service';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { GptFeedbackComponent } from './components/gpt-feedback/gpt-feedback.component';
 
 @Component({
   selector: 'app-submission-details',
@@ -28,8 +30,10 @@ import { FileService } from '../../../../core/services/file.service';
     NzInputNumberModule,
     NzButtonModule,
     NzUploadModule,
+    NzPopconfirmModule,
     NzIconModule,
     NzTagModule,
+    GptFeedbackComponent,
     NzMessageModule],
   templateUrl: './submission-details.component.html',
   styleUrl: './submission-details.component.less'
@@ -54,6 +58,10 @@ export class SubmissionDetailsComponent {
 
   assignmentDetails$ =  toObservable(this.assignmentId).pipe(tap(console.log),switchMap(assignmentId=> this.assignmentClient.getAssignmentById(assignmentId)))
   assignmentDetails = toSignal(this.assignmentDetails$)
+
+   // New signals for GPT analysis feedback
+   gptFeedback = signal<GPTFeedbackDto | null>(null);
+   loadingAnalysis = signal(false);
   
   gradeForm = this.fb.group({
     grade: [null as number | null, [Validators.required, Validators.min(0), Validators.max(100)]],
@@ -75,7 +83,22 @@ export class SubmissionDetailsComponent {
   ngOnInit() {
     this.loadData()
   }
-
+  triggerAnalysis() {
+    this.loadingAnalysis.set(true);
+    this.submissionClient.analyzeSubmission(this.assignmentId())
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (feedback: GPTFeedbackDto) => {
+          this.gptFeedback.set(feedback);
+          this.loadingAnalysis.set(false);
+          this.message.success('Submission analyzed successfully!');
+        },
+        error: () => {
+          this.loadingAnalysis.set(false);
+          this.message.error('Failed to analyze submission');
+        }
+      });
+  }
   loadData():void {
     console.log(this.route.snapshot.params)
 
@@ -114,8 +137,22 @@ export class SubmissionDetailsComponent {
 
   }
 
+  deleteSumbissionFile(fileId:number):void {
+      this.submissionClient.deleteSubmissionFile(fileId).subscribe(
+         {
+          next:()=> {
+             this.message.success("Submission is deleted!")
+             this.loadData();
+          },
+          error:()=> {
+             this.message.error("Oops smth went wrong!")
+          }
+         }
+      )
+   
+  }
+
   loadSubmission(studentId: number, assignmentId:  number) {
-    console.log(studentId,assignmentId,'assignment')
     this.submissionClient.getStudentSubmissionByAssignment(+studentId,this.assignmentId()) 
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

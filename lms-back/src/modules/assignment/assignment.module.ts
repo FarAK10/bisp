@@ -13,12 +13,15 @@ import { SubmissionFile } from './entities/submission-file.entity';
 import { AssignmentFile } from './entities/assigment-file.entity';
 import { AssignmentFilesController } from './controllers/assigmnet-file.controller';
 import { AssignmentFilesService } from './services/assignment-file.service';
+import { OpenAiModule } from '@modules/openai/openai.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Assignment, Submission, StudentEnrollment,SubmissionFile,AssignmentFile]),
     CourseModule,
     UserModule,
+    OpenAiModule,
+    
   ],
   controllers: [AssignmentsController, SubmissionsController,AssignmentFilesController],
   providers: [AssignmentsService, SubmissionsService,AssignmentFilesService],

@@ -13,6 +13,7 @@ import {
   UploadedFiles,
   ForbiddenException,
   NotFoundException,
+  Delete,
 } from '@nestjs/common';
 
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -34,6 +35,7 @@ import { ensureDirectoryExists } from '@common/utils/directory-exists';
 import { AssignmentsService } from '../services/assignment.service';
 import { ApiErroResponses } from '@common/decorators/common-issue-response';
 import { existsSync } from 'fs';
+import { GPTFeedbackDto } from '@modules/openai/dto/gpt-feedback.dto';
 
 @UseGuards(RolesGuard)
 @Controller('assignments/:assignmentId/submissions')
@@ -90,6 +92,25 @@ export class SubmissionsController {
   }
 
 
+  @Get('analyze')
+  @Roles(Role.Student)
+  @ApiOperation({ summary: 'Analyze student submission using GPT' })
+  @ApiResponse({ 
+
+    type: GPTFeedbackDto 
+  })
+  async analyzeSubmission(
+    @Req() req,
+    @Param('assignmentId') assignmentId: number,
+  ): Promise<GPTFeedbackDto> {
+    const studentId = req.user.id;
+    
+    return await this.submissionsService.analyzeSubmissionWithGPT(
+      studentId, 
+      assignmentId
+    );
+  }
+
   
  
   @Roles(Role.Professor)
@@ -132,7 +153,33 @@ export class SubmissionsController {
       assignmentId,
     );
   }
- 
+
+
+  @Delete('files/:fileId')
+  @Roles(Role.Student)
+  @ApiOperation({ summary: 'Delete a submission file' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'File deleted successfully' 
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Not authorized to delete this file' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'File not found' 
+  })
+  async deleteSubmissionFile(
+    @Req() req,
+    @Param('fileId') fileId: number,
+  ): Promise<{ message: string }> {
+    const userId = req.user.id;
+    
+    await this.submissionsService.deleteSubmissionFile(userId, fileId);
+    
+    return { message: 'Submission file deleted successfully' };
+  }
 
    @ApiProduces('application/octet-stream')
       @ApiResponse({

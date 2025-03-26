@@ -115,6 +115,19 @@
                   >
                     {{ file.originalFileName }}
                   </a>
+                  @if (isStudentSubmission() && canSubmit()){
+                    <button 
+                    nz-button 
+                    nzType="text"
+                    nz-popconfirm
+                    nzPopconfirmTitle="Delete this file?"
+                    (nzOnConfirm)="deleteSumbissionFile(file.id)"
+                    class="text-red-500 hover:text-red-700"
+                  >
+                    <span nz-icon nzType="delete"></span>
+                  </button>
+                  }
+            
                 </div>
               </div>
             }
@@ -168,6 +181,11 @@
         </form>
       } @else if (isStudentSubmission()) {
         <div class="flex justify-end">
+          <button nz-button nzType="primary" (click)="triggerAnalysis()" [disabled]="loadingAnalysis()">
+            <span *ngIf="!loadingAnalysis()">Get AI Feedback</span>
+            <span *ngIf="loadingAnalysis()">Analyzing...</span>
+          </button>
+        
           <button 
             nz-button 
             type="button"
@@ -177,5 +195,7 @@
           </button>
         </div>
       }
+      <app-gpt-feedback [gptFeedback]="gptFeedback()"></app-gpt-feedback>
     </div>
+
   </div>
